@@ -1,0 +1,51 @@
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/npm-debug.log
+frontend/yarn-error.log
+frontend/yarn-debug.log
+frontend/.pnp.*
+
+# Laravel / PHP
+backend/vendor/
+backend/node_modules/
+backend/public/build/
+backend/public/hot/
+backend/public/storage/
+backend/storage/*.key
+backend/bootstrap/cache/
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+.env.backup
+.env.production
+.env.local
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+backend/.env
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# dll
+roadmap.md
+GHTM_PRD_v1_1.md
+erd.md
+architecture_guidelines.md

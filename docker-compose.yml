@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: node:20-alpine
+    container_name: ghtm_frontend
+    working_dir: /app/frontend
+    volumes:
+      - ./frontend:/app/frontend
+    ports:
+      - "3000:3000"
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+    networks:
+      - ghtm_network
+
+  backend:
+    image: php:8.2-cli
+    container_name: ghtm_backend
+    working_dir: /app/backend
+    volumes:
+      - ./backend:/app/backend
+    ports:
+      - "8000:8000"
+    # Catatan: Perintah ini mengasumsikan folder backend/ sudah terisi Laravel
+    # Jika belum ada, Anda bisa masuk ke container dan menginstall laravel terlebih dahulu
+    command: sh -c "php artisan serve --host=0.0.0.0 --port=8000"
+    depends_on:
+      - db
+    networks:
+      - ghtm_network
+
+  db:
+    image: postgres:15-alpine
+    container_name: ghtm_db
+    environment:
+      POSTGRES_DB: ghtm_db
+      POSTGRES_USER: ghtm_user
+      POSTGRES_PASSWORD: secretpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - ghtm_db_data:/var/lib/postgresql/data
+    networks:
+      - ghtm_network
+
+volumes:
+  ghtm_db_data:
+
+networks:
+  ghtm_network:
+    driver: bridge

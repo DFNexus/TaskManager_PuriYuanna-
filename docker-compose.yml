@@ -16,7 +16,7 @@ services:
       - ghtm_network
 
   backend:
-    image: php:8.2-cli
+    image: php:8.4-cli
     container_name: ghtm_backend
     working_dir: /app/backend
     volumes:

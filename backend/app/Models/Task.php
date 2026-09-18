@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Task extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = [
+        'judul', 'deskripsi', 'kategori', 'prioritas', 'deadline', 
+        'assigned_to', 'status', 'is_recurring', 'created_by'
+    ];
+
+    public function assignedTo()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function checklistItems()
+    {
+        return $this->hasMany(ChecklistItem::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(TaskReport::class);
+    }
+}

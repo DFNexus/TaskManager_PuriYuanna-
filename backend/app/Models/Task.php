@@ -14,6 +14,14 @@ class Task extends Model
         'assigned_to', 'status', 'is_recurring', 'created_by'
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'is_recurring' => 'boolean',
+            'deadline' => 'datetime',
+        ];
+    }
+
     public function assignedTo()
     {
         return $this->belongsTo(User::class, 'assigned_to');
@@ -26,7 +34,7 @@ class Task extends Model
 
     public function checklistItems()
     {
-        return $this->hasMany(ChecklistItem::class);
+        return $this->hasMany(ChecklistItem::class)->orderBy('urutan', 'asc');
     }
 
     public function reports()

@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\ChecklistItem;
+use App\Models\TaskReport;
+use App\Models\User;
+use App\Notifications\TaskNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -98,6 +101,17 @@ class TaskController extends Controller
             return $newTask;
         });
 
+        // Notify assigned staff
+        $assignedUser = User::find($task->assigned_to);
+        if ($assignedUser) {
+            $assignedUser->notify(new TaskNotification([
+                'title' => 'Tugas Baru Ditugaskan',
+                'message' => "Anda ditugaskan untuk '{$task->judul}'.",
+                'task_id' => $task->id,
+                'type' => 'task_assigned',
+            ]));
+        }
+
         return response()->json([
             'message' => 'Task berhasil dibuat',
             'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems'])
@@ -111,7 +125,13 @@ class TaskController extends Controller
             return response()->json(['message' => 'Unauthorized access to task'], 403);
         }
 
-        return response()->json($task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems']));
+        return response()->json($task->load([
+            'assignedTo:id,name,role,email',
+            'createdBy:id,name',
+            'checklistItems',
+            'reports.approvalLogs.user:id,name,role',
+            'reports.submittedBy:id,name',
+        ]));
     }
 
     public function update(Request $request, Task $task)
@@ -168,9 +188,79 @@ class TaskController extends Controller
 
         $task->update(['assigned_to' => $validated['assigned_to']]);
 
+        // Notify new assignee
+        $newAssignee = User::find($validated['assigned_to']);
+        if ($newAssignee) {
+            $newAssignee->notify(new TaskNotification([
+                'title' => 'Tugas Baru Ditugaskan',
+                'message' => "Anda ditugaskan untuk '{$task->judul}'.",
+                'task_id' => $task->id,
+                'type' => 'task_assigned',
+            ]));
+        }
+
         return response()->json([
             'message' => 'Penugasan staff berhasil diperbarui',
             'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems'])
+        ]);
+    }
+
+    public function submitReport(Request $request, Task $task)
+    {
+        $user = Auth::user();
+
+        // Check permission: assigned staff, Manager, or Admin
+        if ($user->role === 'Staff' && $task->assigned_to !== $user->id) {
+            return response()->json(['message' => 'Anda tidak memiliki hak akses untuk melaporkan task ini.'], 403);
+        }
+
+        // Verify all required checklist items are checked
+        $uncompletedRequired = $task->checklistItems()
+            ->where('tipe', 'required')
+            ->where('is_checked', false)
+            ->count();
+
+        if ($uncompletedRequired > 0) {
+            return response()->json([
+                'message' => "Seluruh item checklist wajib harus diselesaikan sebelum mengirim laporan. Masih ada {$uncompletedRequired} item wajib yang belum selesai.",
+                'uncompleted_count' => $uncompletedRequired
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'catatan_staff' => 'nullable|string',
+        ]);
+
+        $report = DB::transaction(function () use ($task, $user, $validated) {
+            $newReport = TaskReport::create([
+                'task_id' => $task->id,
+                'submitted_by' => $user->id,
+                'submitted_at' => now(),
+                'status' => 'pending',
+                'catatan_staff' => $validated['catatan_staff'] ?? null,
+            ]);
+
+            $task->update(['status' => 'waiting_approval']);
+
+            // Notify SPV and Managers
+            $reviewers = User::whereIn('role', ['SPV', 'Manager', 'Admin'])->get();
+            foreach ($reviewers as $reviewer) {
+                $reviewer->notify(new TaskNotification([
+                    'title' => 'Laporan Tugas Masuk',
+                    'message' => "Staff {$user->name} telah mengirim laporan untuk '{$task->judul}'.",
+                    'task_id' => $task->id,
+                    'report_id' => $newReport->id,
+                    'type' => 'report_submitted',
+                ]));
+            }
+
+            return $newReport;
+        });
+
+        return response()->json([
+            'message' => 'Laporan penyelesaian tugas berhasil dikirim dan menunggu verifikasi supervisor.',
+            'report' => $report,
+            'task' => $task->fresh(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'reports'])
         ]);
     }
 }

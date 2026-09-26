@@ -8,15 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  ClipboardCheck, 
-  Search, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  Eye, 
-  Check, 
-  X, 
+import {
+  ClipboardCheck,
+  Search,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  Check,
+  X,
   RotateCcw,
   Image as ImageIcon,
   FileText,
@@ -492,11 +492,10 @@ export default function ApprovalsPage() {
                     {selectedReport.approval_logs.map((log) => (
                       <div
                         key={log.id}
-                        className={`p-2.5 rounded-md border text-xs ${
-                          log.action === 'approve'
+                        className={`p-2.5 rounded-md border text-xs ${log.action === 'approve'
                             ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20'
                             : 'bg-red-50/50 border-red-200 dark:bg-red-950/20'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between font-semibold mb-1">
                           <span className={log.action === 'approve' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}>

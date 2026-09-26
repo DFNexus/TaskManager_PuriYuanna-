@@ -94,7 +94,7 @@ export default function UnitsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Manajemen Unit</h1>
           <p className="text-muted-foreground mt-1 text-sm">Kelola daftar Guest House dan Kost di Puri Yuanna.</p>
         </div>
-        
+
         <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Tambah Unit
         </Button>

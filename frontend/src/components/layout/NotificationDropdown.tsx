@@ -87,16 +87,14 @@ export default function NotificationDropdown() {
     const type = notif.data?.type;
     const taskId = notif.data?.task_id;
 
-    if (type === 'report_submitted') {
-      router.push('/dashboard/approvals');
-    } else if (taskId && user?.role === 'Staff') {
-      router.push(`/dashboard/my-tasks/${taskId}`);
-    } else if (type === 'report_approved' || type === 'report_rejected') {
-      if (user?.role === 'Staff' && taskId) {
+    if (user?.role === 'Staff') {
+      if (taskId) {
         router.push(`/dashboard/my-tasks/${taskId}`);
       } else {
-        router.push('/dashboard/approvals');
+        router.push('/dashboard/my-tasks');
       }
+    } else if (type === 'report_submitted' || type === 'report_approved' || type === 'report_rejected') {
+      router.push('/dashboard/approvals');
     } else if (taskId) {
       router.push('/dashboard/tasks');
     }

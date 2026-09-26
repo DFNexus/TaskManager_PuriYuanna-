@@ -139,7 +139,7 @@ export default function StaffPage() {
           <h1 className="text-2xl font-bold tracking-tight">Manajemen Staff</h1>
           <p className="text-muted-foreground mt-1 text-sm">Kelola akun dan hak akses pegawai.</p>
         </div>
-        
+
         <Button className="bg-[#22bcb4] hover:bg-[#22bcb4]/90 text-[#011321] font-semibold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Tambah Staff
         </Button>

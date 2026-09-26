@@ -10,17 +10,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Eye, 
-  UserCheck, 
-  Search, 
-  Filter, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  UserCheck,
+  Search,
+  Filter,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
   ListTodo,
   X
 } from 'lucide-react';
@@ -784,19 +784,17 @@ export default function TasksPage() {
                     selectedTask.checklist_items.map((item, idx) => (
                       <div
                         key={item.id || idx}
-                        className={`flex items-start justify-between p-2.5 rounded-md border text-sm ${
-                          item.is_checked
+                        className={`flex items-start justify-between p-2.5 rounded-md border text-sm ${item.is_checked
                             ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20'
                             : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start gap-2.5">
                           <span
-                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
-                              item.is_checked
+                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${item.is_checked
                                 ? 'bg-emerald-500 border-emerald-500 text-white'
                                 : 'border-gray-300 dark:border-gray-600'
-                            }`}
+                              }`}
                           >
                             {item.is_checked && <CheckCircle2 className="h-3 w-3" />}
                           </span>

@@ -249,7 +249,7 @@ export default function ApprovalsPage() {
           <Button
             size="sm"
             variant={activeTab === 'pending' ? 'secondary' : 'ghost'}
-            className={`text-xs h-8 ${activeTab === 'pending' ? 'bg-white dark:bg-gray-700 shadow-xs font-semibold' : ''}`}
+            className={`text-xs h-8 ${activeTab === 'pending' ? 'bg-[#22bcb4] text-[#011321] shadow-xs font-bold' : ''}`}
             onClick={() => setActiveTab('pending')}
           >
             Menunggu Review ({metrics.pending})
@@ -257,7 +257,7 @@ export default function ApprovalsPage() {
           <Button
             size="sm"
             variant={activeTab === 'approved' ? 'secondary' : 'ghost'}
-            className={`text-xs h-8 ${activeTab === 'approved' ? 'bg-white dark:bg-gray-700 shadow-xs font-semibold' : ''}`}
+            className={`text-xs h-8 ${activeTab === 'approved' ? 'bg-[#22bcb4] text-[#011321] shadow-xs font-bold' : ''}`}
             onClick={() => setActiveTab('approved')}
           >
             Disetujui ({metrics.approved})
@@ -265,7 +265,7 @@ export default function ApprovalsPage() {
           <Button
             size="sm"
             variant={activeTab === 'rejected' ? 'secondary' : 'ghost'}
-            className={`text-xs h-8 ${activeTab === 'rejected' ? 'bg-white dark:bg-gray-700 shadow-xs font-semibold' : ''}`}
+            className={`text-xs h-8 ${activeTab === 'rejected' ? 'bg-[#22bcb4] text-[#011321] shadow-xs font-bold' : ''}`}
             onClick={() => setActiveTab('rejected')}
           >
             Perlu Revisi ({metrics.rejected})
@@ -273,7 +273,7 @@ export default function ApprovalsPage() {
           <Button
             size="sm"
             variant={activeTab === 'all' ? 'secondary' : 'ghost'}
-            className={`text-xs h-8 ${activeTab === 'all' ? 'bg-white dark:bg-gray-700 shadow-xs font-semibold' : ''}`}
+            className={`text-xs h-8 ${activeTab === 'all' ? 'bg-[#22bcb4] text-[#011321] shadow-xs font-bold' : ''}`}
             onClick={() => setActiveTab('all')}
           >
             Semua
@@ -372,7 +372,7 @@ export default function ApprovalsPage() {
                     <TableCell className="text-right">
                       <Button
                         size="sm"
-                        className="bg-primary hover:bg-primary/90 text-white shadow-xs"
+                        className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs"
                         onClick={() => handleOpenReview(report)}
                       >
                         <Eye className="mr-1.5 h-3.5 w-3.5" /> Review
@@ -528,7 +528,7 @@ export default function ApprovalsPage() {
                     <X className="mr-1.5 h-4 w-4" /> Minta Revisi / Tolak
                   </Button>
                   <Button
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold"
                     onClick={() => {
                       setCatatanApprove('');
                       setIsApproveOpen(true);
@@ -569,7 +569,7 @@ export default function ApprovalsPage() {
               <Button type="button" variant="outline" onClick={() => setIsApproveOpen(false)} disabled={actionLoading}>
                 Batal
               </Button>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={actionLoading}>
+              <Button type="submit" className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold" disabled={actionLoading}>
                 {actionLoading ? 'Memproses...' : 'Ya, Setujui Laporan'}
               </Button>
             </div>

@@ -296,7 +296,7 @@ export default function TasksPage() {
       case 'medium':
         return <Badge variant="warning">Sedang</Badge>;
       case 'low':
-        return <Badge variant="secondary">Rendah</Badge>;
+        return <Badge variant="success">Rendah</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
@@ -314,7 +314,7 @@ export default function TasksPage() {
         </div>
         <Button
           onClick={handleOpenCreate}
-          className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all flex items-center"
+          className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm transition-all flex items-center"
         >
           <Plus className="mr-2 h-4 w-4" /> Buat Task Baru
         </Button>
@@ -322,10 +322,10 @@ export default function TasksPage() {
 
       {/* Overview Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-l-4 border-l-[#22bcb4]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Task</CardTitle>
-            <ListTodo className="h-4 w-4 text-muted-foreground" />
+            <ListTodo className="h-4 w-4 text-[#22bcb4]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.total}</div>
@@ -340,13 +340,13 @@ export default function TasksPage() {
             <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{metrics.pending}</div>
           </CardContent>
         </Card>
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-l-4 border-l-[#22bcb4]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">Sedang Dikerjakan</CardTitle>
-            <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <CardTitle className="text-sm font-medium text-[#006e69] dark:text-[#22bcb4]">Sedang Dikerjakan</CardTitle>
+            <AlertCircle className="h-4 w-4 text-[#22bcb4]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{metrics.inProgress}</div>
+            <div className="text-2xl font-bold text-[#006e69] dark:text-[#22bcb4]">{metrics.inProgress}</div>
           </CardContent>
         </Card>
         <Card className="shadow-xs">
@@ -517,7 +517,7 @@ export default function TasksPage() {
                           title="Assign Staf"
                           onClick={() => handleOpenAssign(task)}
                         >
-                          <UserCheck className="h-4 w-4 text-blue-600" />
+                          <UserCheck className="h-4 w-4 text-[#22bcb4]" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -710,7 +710,7 @@ export default function TasksPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full mt-4">
+            <Button type="submit" className="w-full mt-4 bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold">
               {editingId ? 'Simpan Perubahan Task' : 'Terbitkan Task'}
             </Button>
           </form>
@@ -847,7 +847,7 @@ export default function TasksPage() {
               </Select>
             </div>
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold">
               Simpan Penugasan
             </Button>
           </form>

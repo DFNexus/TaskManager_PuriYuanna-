@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
 interface Unit {
@@ -118,6 +119,19 @@ export default function StaffPage() {
     }
   };
 
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'Admin':
+        return <Badge variant="dark">{role}</Badge>;
+      case 'Manager':
+        return <Badge variant="brand">{role}</Badge>;
+      case 'SPV':
+        return <Badge variant="cream">{role}</Badge>;
+      default:
+        return <Badge variant="outline">{role}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
@@ -126,7 +140,7 @@ export default function StaffPage() {
           <p className="text-muted-foreground mt-1 text-sm">Kelola akun dan hak akses pegawai.</p>
         </div>
         
-        <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+        <Button className="bg-[#22bcb4] hover:bg-[#22bcb4]/90 text-[#011321] font-semibold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Tambah Staff
         </Button>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -195,7 +209,7 @@ export default function StaffPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full mt-2">{editingId ? 'Simpan Perubahan' : 'Buat Akun'}</Button>
+              <Button type="submit" className="w-full mt-2 bg-[#22bcb4] hover:bg-[#22bcb4]/90 text-[#011321] font-semibold">{editingId ? 'Simpan Perubahan' : 'Buat Akun'}</Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -228,9 +242,7 @@ export default function StaffPage() {
                   <TableCell className="font-medium text-gray-900 dark:text-gray-100">{u.name}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
-                    <span className="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium border border-slate-200 dark:border-slate-700">
-                      {u.role}
-                    </span>
+                    {getRoleBadge(u.role)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{u.unit?.nama || '-'}</TableCell>
                   <TableCell>

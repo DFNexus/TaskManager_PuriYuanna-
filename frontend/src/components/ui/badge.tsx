@@ -8,20 +8,28 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-transparent bg-[#22bcb4] text-[#011321] font-semibold hover:bg-[#22bcb4]/85",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-transparent bg-[#ffeacd] text-[#011321] font-semibold hover:bg-[#ffeacd]/85 border border-[#011321]/10",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+          "border-transparent bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 font-semibold",
+        outline: "text-foreground border-border",
+        // Semantic priority & status levels
         success:
-          "border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+          "border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold",
         warning:
-          "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+          "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-semibold",
         info:
-          "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
+          "border-transparent bg-[#22bcb4]/15 text-[#006e69] dark:bg-[#22bcb4]/20 dark:text-[#22bcb4] font-semibold",
         purple:
-          "border-transparent bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
+          "border-transparent bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-semibold",
+        // Brand variants
+        brand:
+          "border-transparent bg-[#22bcb4] text-[#011321] font-bold shadow-xs",
+        cream:
+          "border-transparent bg-[#ffeacd] text-[#011321] font-bold shadow-xs",
+        dark:
+          "border-[#22bcb4]/30 bg-[#011321] text-[#ffeacd] font-semibold shadow-xs",
       },
     },
     defaultVariants: {

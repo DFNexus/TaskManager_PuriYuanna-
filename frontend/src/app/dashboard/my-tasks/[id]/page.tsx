@@ -276,7 +276,7 @@ export default function TaskExecutionPage() {
       case 'medium':
         return <Badge variant="warning">Sedang</Badge>;
       case 'low':
-        return <Badge variant="secondary">Rendah</Badge>;
+        return <Badge variant="success">Rendah</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
@@ -466,8 +466,8 @@ export default function TaskExecutionPage() {
                         onClick={() => handleToggleCheck(item)}
                         className={`mt-0.5 h-6 w-6 rounded-md border flex items-center justify-center transition-all ${
                           item.is_checked
-                            ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs'
-                            : 'border-gray-300 dark:border-gray-600 hover:border-primary'
+                            ? 'bg-[#22bcb4] border-[#22bcb4] text-[#011321] shadow-xs'
+                            : 'border-gray-300 dark:border-gray-600 hover:border-[#22bcb4]'
                         } ${isReadOnly ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'}`}
                       >
                         {item.is_checked && <Check className="h-4 w-4 stroke-[3]" />}
@@ -603,7 +603,7 @@ export default function TaskExecutionPage() {
               size="lg"
               disabled={!canSubmit}
               onClick={() => setIsSubmitModalOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-white shadow-sm flex items-center gap-2 shrink-0 w-full sm:w-auto"
+              className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm flex items-center gap-2 shrink-0 w-full sm:w-auto"
             >
               <Send className="h-4 w-4" /> Kirim Laporan Tugas
             </Button>
@@ -646,7 +646,7 @@ export default function TaskExecutionPage() {
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting} className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold">
                 {submitting ? 'Mengirim...' : 'Ya, Kirim Laporan'}
               </Button>
             </div>

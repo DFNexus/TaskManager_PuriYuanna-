@@ -39,22 +39,31 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="flex flex-col w-64 h-full bg-white dark:bg-gray-900 border-r shadow-sm">
-      <div className="p-6 border-b">
-        <h2 className="text-2xl font-bold text-primary">Puri Yuanna</h2>
+    <div className="flex flex-col w-64 h-full bg-[#011321] text-white border-r border-[#ffeacd]/10 shadow-lg">
+      <div className="p-6 border-b border-[#ffeacd]/10">
+        <h2 className="text-2xl font-bold tracking-tight text-[#22bcb4]">
+          Puri Yuanna
+          <span className="block text-xs font-normal tracking-widest uppercase text-[#ffeacd] mt-0.5">
+            Living & Operations
+          </span>
+        </h2>
       </div>
       <div className="flex-1 py-4 overflow-y-auto">
-        <nav className="space-y-1 px-4">
+        <nav className="space-y-1.5 px-3">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
               <Link key={item.name} href={item.href}>
                 <Button
-                  variant={isActive ? "secondary" : "ghost"}
-                  className={`w-full justify-start ${isActive ? 'bg-secondary font-semibold' : ''}`}
+                  variant="ghost"
+                  className={`w-full justify-start transition-all ${
+                    isActive 
+                      ? 'bg-[#22bcb4] text-[#011321] font-bold shadow-sm hover:bg-[#22bcb4]/95 hover:text-[#011321]' 
+                      : 'text-slate-300 hover:text-white hover:bg-[#052640]'
+                  }`}
                 >
-                  <Icon className="mr-3 h-5 w-5" />
+                  <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-[#011321]' : 'text-[#22bcb4]'}`} />
                   {item.name}
                 </Button>
               </Link>
@@ -62,13 +71,19 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
-      <div className="p-4 border-t">
-        <div className="mb-4 px-2">
-          <p className="text-sm font-medium">{user?.name}</p>
-          <p className="text-xs text-muted-foreground">{user?.role}</p>
+      <div className="p-4 border-t border-[#ffeacd]/10 bg-[#021829]">
+        <div className="mb-3 px-2">
+          <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
+          <span className="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-medium rounded bg-[#ffeacd] text-[#011321]">
+            {user?.role}
+          </span>
         </div>
-        <Button variant="outline" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950" onClick={handleLogout}>
-          <LogOut className="mr-3 h-5 w-5" />
+        <Button 
+          variant="outline" 
+          className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-950/40 border-red-900/30" 
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-3 h-5 w-5 text-red-400" />
           Logout
         </Button>
       </div>

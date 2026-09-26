@@ -95,7 +95,7 @@ export default function UnitsPage() {
           <p className="text-muted-foreground mt-1 text-sm">Kelola daftar Guest House dan Kost di Puri Yuanna.</p>
         </div>
         
-        <Button className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+        <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Tambah Unit
         </Button>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -127,7 +127,7 @@ export default function UnitsPage() {
                 <Label>Alamat Lengkap</Label>
                 <Input value={alamat} onChange={e => setAlamat(e.target.value)} placeholder="Opsional" />
               </div>
-              <Button type="submit" className="w-full">{editingId ? 'Simpan Perubahan' : 'Simpan Unit'}</Button>
+              <Button type="submit" className="w-full bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold">{editingId ? 'Simpan Perubahan' : 'Simpan Unit'}</Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -159,8 +159,8 @@ export default function UnitsPage() {
                   <TableCell className="font-medium">{unit.id}</TableCell>
                   <TableCell className="font-medium text-gray-900 dark:text-gray-100">{unit.nama}</TableCell>
                   <TableCell>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${unit.tipe === 'GH' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>
-                      {unit.tipe}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-2xs ${unit.tipe === 'GH' ? 'bg-[#22bcb4] text-[#011321]' : 'bg-[#ffeacd] text-[#011321]'}`}>
+                      {unit.tipe === 'GH' ? 'Guest House' : 'Kost'}
                     </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{unit.alamat || '-'}</TableCell>

@@ -2,14 +2,14 @@ version: '3.8'
 
 services:
   frontend:
-    image: node:20-alpine
+    image: node:20-bookworm-slim
     container_name: ghtm_frontend
     working_dir: /app/frontend
     volumes:
       - ./frontend:/app/frontend
     ports:
-      - "3000:3000"
-    command: npm run dev
+      - "3001:3001"
+    command: npm run dev -- -H 0.0.0.0
     environment:
       - NODE_ENV=development
     networks:

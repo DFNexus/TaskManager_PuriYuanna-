@@ -85,7 +85,7 @@ export default function MyTasksPage() {
       case 'medium':
         return <Badge variant="warning">Prioritas Sedang</Badge>;
       case 'low':
-        return <Badge variant="secondary">Prioritas Rendah</Badge>;
+        return <Badge variant="success">Prioritas Rendah</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
@@ -137,13 +137,13 @@ export default function MyTasksPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs">
+        <Card className="shadow-xs border-l-4 border-l-[#22bcb4]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">Sedang Proses</CardTitle>
-            <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <CardTitle className="text-sm font-medium text-[#006e69] dark:text-[#22bcb4]">Sedang Proses</CardTitle>
+            <AlertCircle className="h-4 w-4 text-[#22bcb4]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{metrics.inProgress}</div>
+            <div className="text-2xl font-bold text-[#006e69] dark:text-[#22bcb4]">{metrics.inProgress}</div>
             <p className="text-xs text-muted-foreground mt-1">Checklist sedang dicentang</p>
           </CardContent>
         </Card>
@@ -296,7 +296,7 @@ export default function MyTasksPage() {
 
                   {/* Action button */}
                   <Link href={`/dashboard/my-tasks/${task.id}`} className="block">
-                    <Button className="w-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center">
+                    <Button className="w-full bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold flex items-center justify-center">
                       <Play className="mr-2 h-4 w-4" /> Kerjakan Tugas
                     </Button>
                   </Link>

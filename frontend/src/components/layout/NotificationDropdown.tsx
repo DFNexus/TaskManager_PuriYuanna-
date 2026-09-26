@@ -132,7 +132,7 @@ export default function NotificationDropdown() {
       case 'report_rejected':
         return <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />;
       case 'report_submitted':
-        return <Send className="h-4 w-4 text-blue-600 shrink-0" />;
+        return <Send className="h-4 w-4 text-[#22bcb4] shrink-0" />;
       case 'task_assigned':
       default:
         return <ListTodo className="h-4 w-4 text-amber-600 shrink-0" />;

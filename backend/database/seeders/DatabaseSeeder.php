@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Admin Utama',
             'email' => 'admin@puriyuanna.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('dsa'),
             'role' => 'Admin',
             'unit_id' => $unitGH->id
         ]);
@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Manager Operasional',
             'email' => 'manager@puriyuanna.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('dsa'),
             'role' => 'Manager',
             'unit_id' => $unitGH->id
         ]);
@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Supervisor Kost',
             'email' => 'spv@puriyuanna.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('dsa'),
             'role' => 'SPV',
             'unit_id' => $unitKost->id
         ]);
@@ -53,7 +53,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Staff GH',
             'email' => 'staff@puriyuanna.com',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('dsa'),
             'role' => 'Staff',
             'unit_id' => $unitGH->id
         ]);

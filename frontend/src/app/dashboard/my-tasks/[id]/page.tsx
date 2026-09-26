@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/lib/api';
+import api, { getStorageUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,9 @@ import {
   AlertCircle,
   Check,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Camera,
+  Eye
 } from 'lucide-react';
 
 interface ChecklistItem {
@@ -527,53 +529,97 @@ export default function TaskExecutionPage() {
                           </div>
                         )}
 
-                        {/* Action buttons under item */}
+                        {/* Action buttons and photo section */}
+                        {item.foto_url ? (
+                          <div className="mt-3 flex items-center gap-3 p-2.5 rounded-lg bg-teal-500/5 dark:bg-teal-950/20 border border-teal-500/20">
+                            <div 
+                              className="relative group shrink-0 cursor-pointer overflow-hidden rounded-md border border-teal-500/30 w-14 h-14 bg-slate-100 dark:bg-slate-800"
+                              onClick={() => setPreviewImageUrl(item.foto_url)}
+                            >
+                              <img
+                                src={getStorageUrl(item.foto_url)}
+                                alt={`Bukti ${item.label}`}
+                                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                <Eye className="h-4 w-4" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                Foto bukti terunggah
+                              </p>
+                              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setPreviewImageUrl(item.foto_url)}
+                                  className="h-7 px-2.5 text-xs gap-1"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                  Lihat Foto
+                                </Button>
+                                {!isReadOnly && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleTriggerUpload(item.id)}
+                                    disabled={uploadingItemId === item.id}
+                                    className="h-7 px-2.5 text-xs gap-1 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
+                                  >
+                                    <Camera className="h-3 w-3" />
+                                    {uploadingItemId === item.id ? 'Mengunggah...' : 'Ganti Foto'}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            {!isReadOnly ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleTriggerUpload(item.id)}
+                                disabled={uploadingItemId === item.id}
+                                className="h-8 px-3 text-xs gap-1.5 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 shadow-xs"
+                              >
+                                <Camera className="h-3.5 w-3.5 text-primary" />
+                                {uploadingItemId === item.id ? 'Mengunggah...' : 'Upload Foto Bukti'}
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                                <ImageIcon className="h-3.5 w-3.5 opacity-50" />
+                                Tidak ada foto bukti
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Note action button */}
                         {!isReadOnly && editingNoteId !== item.id && (
-                          <div className="mt-2.5 flex items-center gap-3 text-xs">
-                            <button
+                          <div className="mt-2 flex items-center gap-2">
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
                                 setEditingNoteId(item.id);
                                 setTempNote(item.catatan || '');
                               }}
-                              className="text-primary hover:underline flex items-center gap-1 font-medium"
+                              className="h-7 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
                             >
                               <FileText className="h-3 w-3" />
-                              {item.catatan ? 'Edit Catatan' : '+ Catatan'}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleTriggerUpload(item.id)}
-                              disabled={uploadingItemId === item.id}
-                              className="text-primary hover:underline flex items-center gap-1 font-medium"
-                            >
-                              <Upload className="h-3 w-3" />
-                              {uploadingItemId === item.id
-                                ? 'Mengunggah...'
-                                : item.foto_url
-                                ? 'Ganti Foto Bukti'
-                                : '+ Upload Foto Bukti'}
-                            </button>
+                              {item.catatan ? 'Edit Catatan' : '+ Tambah Catatan'}
+                            </Button>
                           </div>
                         )}
                       </div>
                     </div>
-
-                    {/* Photo thumbnail */}
-                    {item.foto_url && (
-                      <div className="relative group shrink-0">
-                        <img
-                          src={item.foto_url}
-                          alt={`Bukti ${item.label}`}
-                          className="h-14 w-14 object-cover rounded-md border shadow-xs cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => setPreviewImageUrl(item.foto_url)}
-                        />
-                        <span className="absolute -bottom-1 -right-1 p-0.5 bg-white dark:bg-gray-900 rounded-full shadow-xs border">
-                          <ImageIcon className="h-3 w-3 text-emerald-600" />
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
               );
@@ -663,7 +709,7 @@ export default function TaskExecutionPage() {
           {previewImageUrl && (
             <div className="p-3">
               <img
-                src={previewImageUrl}
+                src={getStorageUrl(previewImageUrl)}
                 alt="Bukti Penyelesaian"
                 className="w-full max-h-[75vh] object-contain rounded-md border"
               />

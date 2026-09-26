@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import api from '@/lib/api';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import api, { getStorageUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +22,11 @@ import {
   CheckCircle2,
   AlertCircle,
   ListTodo,
-  X
+  X,
+  Camera,
+  Upload,
+  Image as ImageIcon,
+  FileText
 } from 'lucide-react';
 
 interface ChecklistItem {
@@ -90,6 +94,64 @@ export default function TasksPage() {
 
   // Quick reassign state
   const [newAssignee, setNewAssignee] = useState('');
+
+  // Photo upload & preview states for admin
+  const [uploadingChecklistId, setUploadingChecklistId] = useState<number | null>(null);
+  const [targetChecklistId, setTargetChecklistId] = useState<number | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleTriggerAdminUpload = (itemId: number) => {
+    setTargetChecklistId(itemId);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleAdminFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !targetChecklistId || !selectedTask) return;
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+      setUploadingChecklistId(targetChecklistId);
+      const res = await api.post(`/checklist-items/${targetChecklistId}/photo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const updatedFotoUrl = res.data.foto_url;
+
+      setSelectedTask((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          checklist_items: prev.checklist_items.map((i) =>
+            i.id === targetChecklistId ? { ...i, foto_url: updatedFotoUrl } : i
+          ),
+        };
+      });
+
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (t.id !== selectedTask.id) return t;
+          return {
+            ...t,
+            checklist_items: t.checklist_items.map((i) =>
+              i.id === targetChecklistId ? { ...i, foto_url: updatedFotoUrl } : i
+            ),
+          };
+        })
+      );
+    } catch (err: any) {
+      console.error('Error uploading photo by admin:', err);
+      alert(err.response?.data?.message || 'Gagal mengunggah foto bukti.');
+    } finally {
+      setUploadingChecklistId(null);
+      setTargetChecklistId(null);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -784,31 +846,115 @@ export default function TasksPage() {
                     selectedTask.checklist_items.map((item, idx) => (
                       <div
                         key={item.id || idx}
-                        className={`flex items-start justify-between p-2.5 rounded-md border text-sm ${item.is_checked
-                            ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20'
+                        className={`p-3 rounded-lg border text-sm transition-all ${
+                          item.is_checked
+                            ? 'bg-emerald-50/40 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/50'
                             : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'
-                          }`}
+                        }`}
                       >
-                        <div className="flex items-start gap-2.5">
-                          <span
-                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${item.is_checked
-                                ? 'bg-emerald-500 border-emerald-500 text-white'
-                                : 'border-gray-300 dark:border-gray-600'
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2.5">
+                            <span
+                              className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
+                                item.is_checked
+                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  : 'border-gray-300 dark:border-gray-600'
                               }`}
-                          >
-                            {item.is_checked && <CheckCircle2 className="h-3 w-3" />}
-                          </span>
-                          <span
-                            className={
-                              item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'
-                            }
-                          >
-                            {item.label}
-                          </span>
+                            >
+                              {item.is_checked && <CheckCircle2 className="h-3 w-3" />}
+                            </span>
+                            <div>
+                              <span
+                                className={
+                                  item.is_checked ? 'line-through text-muted-foreground' : 'font-medium'
+                                }
+                              >
+                                {item.label}
+                              </span>
+                              {item.catatan && (
+                                <div className="mt-1.5 p-2 bg-slate-50 dark:bg-gray-800/60 rounded text-xs text-muted-foreground border flex items-start gap-1.5">
+                                  <FileText className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
+                                  <span>{item.catatan}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant={item.tipe === 'required' ? 'secondary' : 'outline'} className="text-[10px] shrink-0">
+                            {item.tipe === 'required' ? 'Wajib' : 'Opsional'}
+                          </Badge>
                         </div>
-                        <Badge variant={item.tipe === 'required' ? 'secondary' : 'outline'} className="text-[10px]">
-                          {item.tipe === 'required' ? 'Wajib' : 'Opsional'}
-                        </Badge>
+
+                        {/* Photo Evidence Section for Admin */}
+                        <div className="mt-2.5 pt-2.5 border-t border-dashed border-gray-200 dark:border-gray-800">
+                          {item.foto_url ? (
+                            <div className="flex items-center gap-3 p-2 rounded-md bg-teal-500/5 dark:bg-teal-950/20 border border-teal-500/20">
+                              <div
+                                className="relative group shrink-0 cursor-pointer overflow-hidden rounded-md border border-teal-500/30 w-12 h-12 bg-slate-100 dark:bg-slate-800"
+                                onClick={() => setPreviewImageUrl(item.foto_url || null)}
+                              >
+                                <img
+                                  src={getStorageUrl(item.foto_url)}
+                                  alt={`Bukti ${item.label}`}
+                                  className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                  <Eye className="h-3.5 w-3.5" />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                  Foto bukti terlampir
+                                </p>
+                                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPreviewImageUrl(item.foto_url || null)}
+                                    className="h-6 px-2 text-[11px] gap-1"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                    Lihat Foto
+                                  </Button>
+                                  {item.id && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleTriggerAdminUpload(item.id!)}
+                                      disabled={uploadingChecklistId === item.id}
+                                      className="h-6 px-2 text-[11px] gap-1 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
+                                    >
+                                      <Camera className="h-3 w-3" />
+                                      {uploadingChecklistId === item.id ? 'Mengunggah...' : 'Ganti Foto'}
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                                <ImageIcon className="h-3.5 w-3.5 opacity-50" />
+                                Belum ada foto bukti
+                              </span>
+                              {item.id && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleTriggerAdminUpload(item.id!)}
+                                  disabled={uploadingChecklistId === item.id}
+                                  className="h-7 px-2.5 text-xs gap-1.5 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 shadow-xs"
+                                >
+                                  <Camera className="h-3.5 w-3.5 text-primary" />
+                                  {uploadingChecklistId === item.id ? 'Mengunggah...' : 'Upload Foto Bukti'}
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -854,6 +1000,33 @@ export default function TasksPage() {
               Simpan Penugasan
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden file input for admin photo upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleAdminFileChange}
+        accept="image/*"
+        className="hidden"
+      />
+
+      {/* Modal: Preview Foto Bukti Admin */}
+      <Dialog open={!!previewImageUrl} onOpenChange={() => setPreviewImageUrl(null)}>
+        <DialogContent className="sm:max-w-[600px] p-2">
+          <DialogHeader className="p-3 pb-0">
+            <DialogTitle className="text-base">Foto Bukti Penyelesaian</DialogTitle>
+          </DialogHeader>
+          {previewImageUrl && (
+            <div className="p-3">
+              <img
+                src={getStorageUrl(previewImageUrl)}
+                alt="Bukti Penyelesaian"
+                className="w-full max-h-[75vh] object-contain rounded-md border"
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

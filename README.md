@@ -12,10 +12,10 @@ Sistem telah dilengkapi dengan data seeder bawaan sehingga Anda dapat langsung m
 
 | Peran (Role) | Alamat Email | Kata Sandi | Wewenang Utama |
 |---|---|---|---|
-| **Admin Utama** | `admin@puriyuanna.com` | `password123` | Akses penuh master data, manajemen unit, staf, dan pengawasan operasional |
-| **Manager Operasional** | `manager@puriyuanna.com` | `password123` | Membuat tugas, menyusun checklist, menugaskan staf, dan approval akhir |
-| **Supervisor (SPV)** | `spv@puriyuanna.com` | `password123` | Menginspeksi pekerjaan lapangan, me-review laporan masuk, *approve* atau minta revisi (*reject*) |
-| **Staff Operasional** | `staff@puriyuanna.com` | `password123` | Melihat tugas yang di-assign, mencentang checklist, upload foto bukti, dan submit laporan |
+| **Admin Utama** | `admin@puriyuanna.com` | `dsa` | Akses penuh master data, manajemen unit, staf, dan pengawasan operasional |
+| **Manager Operasional** | `manager@puriyuanna.com` | `dsa` | Membuat tugas, menyusun checklist, menugaskan staf, dan approval akhir |
+| **Supervisor (SPV)** | `spv@puriyuanna.com` | `dsa` | Menginspeksi pekerjaan lapangan, me-review laporan masuk, *approve* atau minta revisi (*reject*) |
+| **Staff Operasional** | `staff@puriyuanna.com` | `dsa` | Melihat tugas yang di-assign, mencentang checklist, upload foto bukti, dan submit laporan |
 
 ---
 
@@ -68,7 +68,7 @@ Sebagai Manager atau Admin, fokus utama Anda adalah memastikan properti terdafta
 
 #### 1. Login ke Aplikasi
 1. Buka halaman utama [http://localhost:3001/login](http://localhost:3001/login).
-2. Masukkan email `manager@puriyuanna.com` (atau `admin@puriyuanna.com`) dan kata sandi `password123`.
+2. Masukkan email `manager@puriyuanna.com` (atau `admin@puriyuanna.com`) dan kata sandi `dsa`.
 3. Anda akan diarahkan ke halaman **Dashboard Overview**.
 
 #### 2. Mengelola Properti (Menu "Manajemen Unit")

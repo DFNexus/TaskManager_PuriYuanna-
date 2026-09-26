@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import api from '@/lib/api';
+import api, { getStorageUrl } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -456,24 +456,37 @@ export default function ApprovalsPage() {
                         </div>
                       </div>
 
-                      {/* Photo Thumbnail */}
+                      {/* Photo Thumbnail & Action */}
                       {item.foto_url ? (
-                        <div
-                          className="shrink-0 cursor-pointer group relative"
-                          onClick={() => setPreviewPhoto(item.foto_url)}
-                          title="Klik untuk memperbesar"
-                        >
-                          <img
-                            src={item.foto_url}
-                            alt={`Bukti ${item.label}`}
-                            className="h-14 w-14 object-cover rounded-md border shadow-xs group-hover:opacity-85 transition-opacity"
-                          />
-                          <span className="absolute bottom-1 right-1 bg-black/60 text-white p-0.5 rounded text-[10px]">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div
+                            className="cursor-pointer group relative overflow-hidden rounded-md border border-teal-500/30 w-12 h-12 bg-slate-100 dark:bg-slate-800"
+                            onClick={() => setPreviewPhoto(item.foto_url)}
+                            title="Klik untuk memperbesar"
+                          >
+                            <img
+                              src={getStorageUrl(item.foto_url)}
+                              alt={`Bukti ${item.label}`}
+                              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                              <Eye className="h-3 w-3" />
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPreviewPhoto(item.foto_url)}
+                            className="h-7 px-2.5 text-xs gap-1"
+                          >
                             <Eye className="h-3 w-3" />
-                          </span>
+                            Lihat Foto
+                          </Button>
                         </div>
                       ) : (
-                        <span className="text-[11px] text-muted-foreground italic shrink-0">
+                        <span className="text-[11px] text-muted-foreground italic shrink-0 flex items-center gap-1">
+                          <ImageIcon className="h-3 w-3 opacity-50" />
                           Tanpa foto
                         </span>
                       )}
@@ -620,7 +633,7 @@ export default function ApprovalsPage() {
           {previewPhoto && (
             <div className="p-3">
               <img
-                src={previewPhoto}
+                src={getStorageUrl(previewPhoto)}
                 alt="Foto Bukti"
                 className="w-full max-h-[75vh] object-contain rounded-md border"
               />

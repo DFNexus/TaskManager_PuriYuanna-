@@ -150,7 +150,7 @@ export default function StaffPage() {
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingId ? 'Edit Staff' : 'Tambah Staff Baru'}</DialogTitle>
-              {!editingId && <DialogDescription>Password default untuk staff baru adalah <b className="text-gray-800 dark:text-gray-200">password123</b>.</DialogDescription>}
+              {!editingId && <DialogDescription>Password default untuk staff baru adalah <b className="text-gray-800 dark:text-gray-200">dsa</b>.</DialogDescription>}
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-2">
               <div className="space-y-2">

@@ -25,7 +25,7 @@ class UserController extends Controller
         ]);
 
         // Default password for new staff
-        $validated['password'] = Hash::make('password123');
+        $validated['password'] = Hash::make('dsa');
 
         $user = User::create($validated);
         return response()->json(['message' => 'Staff berhasil ditambahkan', 'data' => $user], 201);

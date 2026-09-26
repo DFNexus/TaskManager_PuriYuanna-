@@ -183,4 +183,24 @@ class TaskTest extends TestCase
             'assigned_to' => $this->staff2->id,
         ]);
     }
+
+    public function test_spv_can_list_users()
+    {
+        $spv = User::create([
+            'name' => 'SPV User',
+            'email' => 'spv_test@puriyuanna.com',
+            'password' => bcrypt('password123'),
+            'role' => 'SPV',
+            'unit_id' => $this->unit->id,
+            'status' => 'active',
+        ]);
+
+        $token = JWTAuth::fromUser($spv);
+
+        $response = $this->withHeader('Authorization', "Bearer $token")
+                         ->getJson('/api/users');
+
+        $response->assertStatus(200);
+        $this->assertGreaterThanOrEqual(3, count($response->json()));
+    }
 }

@@ -96,11 +96,16 @@ export default function TasksPage() {
       setLoading(true);
       const [tasksRes, usersRes] = await Promise.all([
         api.get('/tasks'),
-        api.get('/users')
+        api.get('/users').catch((err) => {
+          console.warn('Could not fetch staff list:', err.response?.status || err.message);
+          return { data: [] };
+        })
       ]);
       setTasks(tasksRes.data);
       // Filter only active staff/users who can be assigned tasks
-      setStaffList(usersRes.data.filter((u: User) => u.status === 'active' || !u.status));
+      if (Array.isArray(usersRes?.data)) {
+        setStaffList(usersRes.data.filter((u: User) => u.status === 'active' || !u.status));
+      }
     } catch (e) {
       console.error('Error fetching data:', e);
     } finally {

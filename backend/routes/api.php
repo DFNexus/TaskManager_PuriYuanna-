@@ -36,21 +36,34 @@ Route::middleware('auth:api')->group(function () {
     Route::post('checklist-items/{checklistItem}/photo', [ChecklistItemController::class, 'uploadPhoto']);
     Route::post('tasks/{task}/submit-report', [TaskController::class, 'submitReport']);
 
-    // Approvals & Report Reviews (Manager, Admin, SPV)
+    // Approvals, Monitoring, and Task Management (Manager, Admin, SPV)
     Route::middleware('role:Manager,Admin,SPV')->group(function () {
         Route::get('reports', [ApprovalController::class, 'index']);
         Route::get('reports/{report}', [ApprovalController::class, 'show']);
         Route::post('reports/{report}/approve', [ApprovalController::class, 'approve']);
         Route::post('reports/{report}/reject', [ApprovalController::class, 'reject']);
-    });
 
-    // Master data & Task management for Manager/Admin
-    Route::middleware('role:Manager,Admin')->group(function () {
-        Route::apiResource('units', UnitController::class);
-        Route::apiResource('users', UserController::class);
+        // View staff and units
+        Route::get('users', [UserController::class, 'index']);
+        Route::get('users/{user}', [UserController::class, 'show']);
+        Route::get('units', [UnitController::class, 'index']);
+        Route::get('units/{unit}', [UnitController::class, 'show']);
+
+        // Task creation & assignment
         Route::post('tasks', [TaskController::class, 'store']);
         Route::match(['put', 'patch'], 'tasks/{task}', [TaskController::class, 'update']);
         Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
         Route::patch('tasks/{task}/assign', [TaskController::class, 'assign']);
+    });
+
+    // Master data manipulation for Manager/Admin
+    Route::middleware('role:Manager,Admin')->group(function () {
+        Route::post('units', [UnitController::class, 'store']);
+        Route::match(['put', 'patch'], 'units/{unit}', [UnitController::class, 'update']);
+        Route::delete('units/{unit}', [UnitController::class, 'destroy']);
+
+        Route::post('users', [UserController::class, 'store']);
+        Route::match(['put', 'patch'], 'users/{user}', [UserController::class, 'update']);
+        Route::delete('users/{user}', [UserController::class, 'destroy']);
     });
 });

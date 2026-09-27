@@ -39,12 +39,12 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="flex flex-col w-64 h-full bg-[#011321] text-white border-r border-[#ffeacd]/10 shadow-lg">
-      <div className="p-6 border-b border-[#ffeacd]/10">
+    <div className="flex flex-col w-64 h-full bg-white dark:bg-[#011321] text-gray-800 dark:text-white border-r border-gray-200 dark:border-[#ffeacd]/10 shadow-lg transition-colors duration-200">
+      <div className="p-6 border-b border-gray-200 dark:border-[#ffeacd]/10">
         <h2 className="text-2xl font-bold tracking-tight text-[#22bcb4]">
           Puri Yuanna
-          <span className="block text-xs font-normal tracking-widest uppercase text-[#ffeacd] mt-0.5">
-            Living & Operations
+          <span className="block text-[10px] font-medium tracking-widest uppercase text-gray-500 dark:text-[#ffeacd]/80 mt-1">
+            Guest House & Kost
           </span>
         </h2>
       </div>
@@ -54,16 +54,16 @@ export default function Sidebar() {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
-              <Link key={item.name} href={item.href}>
+              <Link key={item.name} href={item.href} className="block">
                 <Button
                   variant="ghost"
                   className={`w-full justify-start transition-all ${
                     isActive 
-                      ? 'bg-[#22bcb4] text-[#011321] font-bold shadow-sm hover:bg-[#22bcb4]/95 hover:text-[#011321]' 
-                      : 'text-slate-300 hover:text-white hover:bg-[#052640]'
+                      ? 'bg-[#22bcb4] text-[#011321] dark:text-[#011321] font-bold shadow-xs hover:bg-[#1fa9a2] dark:hover:bg-[#1fa9a2] hover:text-[#011321] dark:hover:text-[#011321]' 
+                      : 'text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#052640]'
                   }`}
                 >
-                  <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-[#011321]' : 'text-[#22bcb4]'}`} />
+                  <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-[#011321] dark:text-[#011321]' : 'text-[#22bcb4]'}`} />
                   {item.name}
                 </Button>
               </Link>
@@ -71,19 +71,19 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
-      <div className="p-4 border-t border-[#ffeacd]/10 bg-[#021829]">
+      <div className="p-4 border-t border-gray-200 dark:border-[#ffeacd]/10 bg-gray-50 dark:bg-[#021829] transition-colors duration-200">
         <div className="mb-3 px-2">
-          <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
+          <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">{user?.name}</p>
           <span className="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-medium rounded bg-[#ffeacd] text-[#011321]">
             {user?.role}
           </span>
         </div>
         <Button 
           variant="outline" 
-          className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-950/40 border-red-900/30" 
+          className="w-full justify-start bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border-red-200 shadow-xs dark:bg-red-950/20 dark:text-red-300 dark:border-red-900/40 dark:hover:bg-red-950/50 dark:hover:text-red-200 font-medium" 
           onClick={handleLogout}
         >
-          <LogOut className="mr-3 h-5 w-5 text-red-400" />
+          <LogOut className="mr-3 h-5 w-5 text-red-500 dark:text-red-400" />
           Logout
         </Button>
       </div>

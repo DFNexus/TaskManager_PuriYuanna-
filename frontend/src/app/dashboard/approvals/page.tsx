@@ -372,7 +372,7 @@ export default function ApprovalsPage() {
                     <TableCell className="text-right">
                       <Button
                         size="sm"
-                        className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs"
+                        className="bg-[#ffeacd] hover:bg-[#ffe0b8] text-[#011321] font-bold shadow-xs"
                         onClick={() => handleOpenReview(report)}
                       >
                         <Eye className="mr-1.5 h-3.5 w-3.5" /> Review

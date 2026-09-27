@@ -76,34 +76,34 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="bg-[#011321] text-white p-6 rounded-xl shadow-md border border-[#ffeacd]/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden">
+      <div className="bg-white dark:bg-[#011321] text-[#011321] dark:text-white p-6 rounded-xl shadow-xs border border-teal-100 dark:border-[#ffeacd]/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden transition-colors">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-[#22bcb4]/10 rounded-full blur-2xl pointer-events-none" />
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#22bcb4]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#006e69] dark:text-[#22bcb4]">
               Dashboard Operasional
             </span>
-            <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-[#ffeacd] text-[#011321]">
+            <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-100 text-amber-900 dark:bg-[#ffeacd] dark:text-[#011321]">
               {user?.role}
             </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Selamat Datang, <span className="text-[#22bcb4]">{user?.name}</span>!
+          <h1 className="text-2xl font-bold tracking-tight text-[#011321] dark:text-white">
+            Selamat Datang, <span className="text-[#006e69] dark:text-[#22bcb4]">{user?.name}</span>!
           </h1>
-          <p className="text-slate-300 text-sm mt-1 max-w-xl">
+          <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 max-w-xl">
             Sistem manajemen task & checklist terpadu Puri Yuanna Living. Pantau dan kelola seluruh alur operasional properti secara real-time.
           </p>
         </div>
         {(user?.role === 'Manager' || user?.role === 'Admin') && (
           <Link href="/dashboard/tasks" className="relative z-10 shrink-0">
-            <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm flex items-center">
+            <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center">
               <Plus className="mr-2 h-4 w-4" /> Buat Task Baru
             </Button>
           </Link>
         )}
         {user?.role === 'Staff' && (
           <Link href="/dashboard/my-tasks" className="relative z-10 shrink-0">
-            <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm flex items-center">
+            <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center">
               <ListTodo className="mr-2 h-4 w-4" /> Buka Tugas Saya
             </Button>
           </Link>
@@ -190,7 +190,7 @@ export default function DashboardPage() {
             <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border">
               <CardContent className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-[#011321] text-[#22bcb4]">
+                  <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-[#011321] text-[#006e69] dark:text-[#22bcb4]">
                     <CheckSquare className="h-5 w-5" />
                   </div>
                   <div>
@@ -209,7 +209,7 @@ export default function DashboardPage() {
             <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border">
               <CardContent className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-[#011321] text-[#ffeacd]">
+                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-[#011321] text-amber-700 dark:text-[#ffeacd]">
                     <Home className="h-5 w-5" />
                   </div>
                   <div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
             <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border">
               <CardContent className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-[#011321] text-[#22bcb4]">
+                  <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-[#011321] text-[#006e69] dark:text-[#22bcb4]">
                     <Users className="h-5 w-5" />
                   </div>
                   <div>

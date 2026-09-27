@@ -46,10 +46,7 @@ class UserController extends Controller
             'status' => 'sometimes|required|in:active,inactive',
         ]);
 
-        if ($request->filled('password')) {
-            $validated['password'] = Hash::make($request->password);
-        }
-
+        // Admin only manages email, name, role, status, unit; password is not editable by admin
         $user->update($validated);
         return response()->json(['message' => 'Staff berhasil diupdate', 'data' => $user]);
     }

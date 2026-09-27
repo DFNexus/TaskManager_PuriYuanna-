@@ -39,7 +39,6 @@ export default function StaffPage() {
   const [role, setRole] = useState('Staff');
   const [status, setStatus] = useState('active');
   const [unitId, setUnitId] = useState<string>('none');
-  const [password, setPassword] = useState('');
 
   const fetchData = async () => {
     try {
@@ -67,7 +66,6 @@ export default function StaffPage() {
     setRole('Staff');
     setStatus('active');
     setUnitId('none');
-    setPassword('');
     setEditingId(null);
   };
 
@@ -77,7 +75,6 @@ export default function StaffPage() {
     setRole(user.role);
     setStatus(user.status);
     setUnitId(user.unit_id ? user.unit_id.toString() : 'none');
-    setPassword('');
     setEditingId(user.id);
     setIsDialogOpen(true);
   };
@@ -105,7 +102,6 @@ export default function StaffPage() {
       };
 
       if (editingId) {
-        if (password) payload.password = password;
         await api.put(`/users/${editingId}`, payload);
       } else {
         await api.post('/users', payload);
@@ -161,12 +157,6 @@ export default function StaffPage() {
                 <Label>Email</Label>
                 <Input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@puriyuanna.com" />
               </div>
-              {editingId && (
-                <div className="space-y-2">
-                  <Label>Password Baru (Opsional)</Label>
-                  <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Kosongkan jika tidak ingin mengubah" />
-                </div>
-              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Role</Label>
@@ -197,9 +187,22 @@ export default function StaffPage() {
               </div>
               <div className="space-y-2">
                 <Label>Unit Penempatan</Label>
-                <Select value={unitId} onValueChange={(val) => val && setUnitId(val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Unit" />
+                <Select
+                  items={[
+                    { value: 'none', label: 'Tidak Ada (Pusat)' },
+                    ...units.map((u) => ({ value: u.id.toString(), label: u.nama }))
+                  ]}
+                  value={unitId}
+                  onValueChange={(val) => val && setUnitId(val)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Unit">
+                      {(value: string | null) => {
+                        if (!value || value === 'none') return 'Tidak Ada (Pusat)';
+                        const u = units.find((unit) => unit.id.toString() === value);
+                        return u ? u.nama : 'Tidak Ada (Pusat)';
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Tidak Ada (Pusat)</SelectItem>

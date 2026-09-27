@@ -177,6 +177,12 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchData();
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'create' || params.get('create') === 'true') {
+        handleOpenCreate();
+      }
+    }
   }, []);
 
   const resetForm = () => {
@@ -691,9 +697,19 @@ export default function TasksPage() {
 
               <div className="space-y-2">
                 <Label>Tugaskan Kepada (Staff)</Label>
-                <Select value={assignedTo} onValueChange={(val) => val && setAssignedTo(val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Staff" />
+                <Select
+                  items={staffList.map((s) => ({ value: s.id.toString(), label: `${s.name} (${s.role})` }))}
+                  value={assignedTo}
+                  onValueChange={(val) => val && setAssignedTo(val)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Staff">
+                      {(value: string | null) => {
+                        if (!value) return 'Pilih Staff';
+                        const staff = staffList.find((s) => s.id.toString() === value);
+                        return staff ? `${staff.name} (${staff.role})` : 'Pilih Staff';
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {staffList.map((staff) => (
@@ -982,9 +998,19 @@ export default function TasksPage() {
           <form onSubmit={handleReassign} className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label>Pilih Staff Pengganti</Label>
-              <Select value={newAssignee} onValueChange={(val) => val && setNewAssignee(val)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Staff" />
+              <Select
+                items={staffList.map((s) => ({ value: s.id.toString(), label: `${s.name} (${s.role})` }))}
+                value={newAssignee}
+                onValueChange={(val) => val && setNewAssignee(val)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Staff">
+                    {(value: string | null) => {
+                      if (!value) return 'Pilih Staff';
+                      const staff = staffList.find((s) => s.id.toString() === value);
+                      return staff ? `${staff.name} (${staff.role})` : 'Pilih Staff';
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {staffList.map((staff) => (

@@ -95,7 +95,7 @@ export default function DashboardPage() {
           </p>
         </div>
         {(user?.role === 'Manager' || user?.role === 'Admin') && (
-          <Link href="/dashboard/tasks" className="relative z-10 shrink-0">
+          <Link href="/dashboard/tasks?action=create" className="relative z-10 shrink-0">
             <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center">
               <Plus className="mr-2 h-4 w-4" /> Buat Task Baru
             </Button>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
 
       {/* Overview Stat Cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card className="shadow-xs border-l-4 border-l-[#22bcb4]">
+        <Card className="shadow-xs border-l-4 border-l-[#22bcb4] border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Task</CardTitle>
             <CheckSquare className="h-4 w-4 text-[#22bcb4]" />
@@ -125,7 +125,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs border-l-4 border-l-amber-500">
+        <Card className="shadow-xs border-l-4 border-l-amber-500 border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-amber-700 dark:text-amber-400">Pending</CardTitle>
             <Clock className="h-4 w-4 text-amber-500" />
@@ -136,7 +136,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs border-l-4 border-l-[#22bcb4]">
+        <Card className="shadow-xs border-l-4 border-l-[#22bcb4] border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[#006e69] dark:text-[#22bcb4]">Dikerjakan</CardTitle>
             <AlertCircle className="h-4 w-4 text-[#22bcb4]" />
@@ -147,7 +147,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xs border-l-4 border-l-emerald-500">
+        <Card className="shadow-xs border-l-4 border-l-emerald-500 border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Selesai / Review</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -163,7 +163,7 @@ export default function DashboardPage() {
       {user?.role === 'Staff' && (
         <div>
           <Link href="/dashboard/my-tasks" className="block group">
-            <Card className="hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer bg-gradient-to-r from-[#22bcb4]/10 via-transparent to-[#ffeacd]/10 border border-[#22bcb4]/20">
+            <Card className="hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer bg-gradient-to-r from-[#22bcb4]/10 via-transparent to-[#ffeacd]/10 border border-[#22bcb4]/20 dark:bg-[#000a14]">
               <CardContent className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-lg bg-[#22bcb4] text-[#011321] font-bold shadow-xs">
@@ -187,10 +187,10 @@ export default function DashboardPage() {
       {(user?.role === 'Manager' || user?.role === 'Admin') && (
         <div className="grid gap-4 md:grid-cols-3">
           <Link href="/dashboard/tasks" className="block group">
-            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border">
+            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
               <CardContent className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-[#011321] text-[#006e69] dark:text-[#22bcb4]">
+                  <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-[#011728] text-[#006e69] dark:text-[#22bcb4]">
                     <CheckSquare className="h-5 w-5" />
                   </div>
                   <div>
@@ -206,10 +206,10 @@ export default function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/units" className="block group">
-            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border">
+            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
               <CardContent className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-[#011321] text-amber-700 dark:text-[#ffeacd]">
+                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-[#011728] text-amber-700 dark:text-[#ffeacd]">
                     <Home className="h-5 w-5" />
                   </div>
                   <div>
@@ -225,10 +225,10 @@ export default function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/staff" className="block group">
-            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border">
+            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
               <CardContent className="p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-[#011321] text-[#006e69] dark:text-[#22bcb4]">
+                  <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-[#011728] text-[#006e69] dark:text-[#22bcb4]">
                     <Users className="h-5 w-5" />
                   </div>
                   <div>
@@ -246,8 +246,8 @@ export default function DashboardPage() {
       )}
 
       {/* Recent Tasks List */}
-      <Card className="shadow-xs border">
-        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+      <Card className="shadow-xs border border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-gray-100 dark:border-white/10">
           <div>
             <CardTitle className="text-base font-bold text-[#011321] dark:text-white">Tugas Terbaru</CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">Daftar task yang baru dibuat atau diperbarui</p>
@@ -265,7 +265,7 @@ export default function DashboardPage() {
             <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">Belum ada tugas yang ditambahkan.</p>
               {(user?.role === 'Manager' || user?.role === 'Admin') && (
-                <Link href="/dashboard/tasks" className="inline-block mt-3">
+                <Link href="/dashboard/tasks?action=create" className="inline-block mt-3">
                   <Button size="sm" className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-semibold">
                     <Plus className="mr-1 h-3.5 w-3.5" /> Buat Task Pertama
                   </Button>

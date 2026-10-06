@@ -23,5 +23,5 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
 # Install production dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Start Laravel using dynamic port from Railway ($PORT) or fallback to 8000
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Run migrations then start Laravel server
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

@@ -21,9 +21,9 @@ services:
       dockerfile: Dockerfile
     image: ghtm_backend:latest
     container_name: ghtm_backend
-    working_dir: /app/backend
+    working_dir: /app
     volumes:
-      - ./backend:/app/backend
+      - ./backend:/app
     ports:
       - "8000:8000"
     # Catatan: Perintah ini mengasumsikan folder backend/ sudah terisi Laravel

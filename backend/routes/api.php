@@ -13,6 +13,7 @@ use App\Http\Controllers\NotificationController;
 
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
     
     Route::middleware('auth:api')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
@@ -64,6 +65,7 @@ Route::middleware('auth:api')->group(function () {
 
         Route::post('users', [UserController::class, 'store']);
         Route::match(['put', 'patch'], 'users/{user}', [UserController::class, 'update']);
+        Route::post('users/{user}/reset-registration', [UserController::class, 'resetRegistration']);
         Route::delete('users/{user}', [UserController::class, 'destroy']);
     });
 });

@@ -16,6 +16,13 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable, SoftDeletes;
 
+    protected $appends = ['is_registered'];
+
+    public function getIsRegisteredAttribute(): bool
+    {
+        return !empty($this->password);
+    }
+
     protected function casts(): array
     {
         return [

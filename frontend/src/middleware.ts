@@ -12,8 +12,8 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect auth users away from login
-  if (pathname === '/login' && token) {
+  // Redirect auth users away from login or signup
+  if ((pathname === '/login' || pathname === '/signup') && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
@@ -30,5 +30,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/dashboard/:path*', '/login'],
+  matcher: ['/', '/dashboard/:path*', '/login', '/signup'],
 };

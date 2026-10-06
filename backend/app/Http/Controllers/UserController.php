@@ -17,18 +17,21 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'role' => ['required', Rule::in(['Manager', 'SPV', 'Staff', 'Admin'])],
             'unit_id' => 'nullable|exists:units,id',
+            'name' => 'nullable|string|max:255',
             'status' => 'required|in:active,inactive',
         ]);
 
-        // Default password for new staff
-        $validated['password'] = Hash::make('dsa');
+        $validated['email'] = strtolower(trim($validated['email']));
+        $validated['name'] = !empty($validated['name']) ? $validated['name'] : explode('@', $validated['email'])[0];
+
+        // Staff password is set to null until staff completes Sign Up
+        $validated['password'] = null;
 
         $user = User::create($validated);
-        return response()->json(['message' => 'Staff berhasil ditambahkan', 'data' => $user], 201);
+        return response()->json(['message' => 'Email staf berhasil didaftarkan ke sistem', 'data' => $user], 201);
     }
 
     public function show(User $user)
@@ -46,9 +49,20 @@ class UserController extends Controller
             'status' => 'sometimes|required|in:active,inactive',
         ]);
 
+        if (isset($validated['email'])) {
+            $validated['email'] = strtolower(trim($validated['email']));
+        }
+
         // Admin only manages email, name, role, status, unit; password is not editable by admin
         $user->update($validated);
         return response()->json(['message' => 'Staff berhasil diupdate', 'data' => $user]);
+    }
+
+    public function resetRegistration(User $user)
+    {
+        $user->password = null;
+        $user->save();
+        return response()->json(['message' => 'Pendaftaran akun berhasil di-reset. Staf dapat melakukan Sign Up kembali untuk membuat password baru.']);
     }
 
     public function destroy(User $user)

@@ -9,6 +9,7 @@ export interface User {
   role: 'Admin' | 'Manager' | 'SPV' | 'Staff' | string;
   unit_id: number | null;
   status?: string;
+  is_registered?: boolean;
 }
 
 interface AuthState {

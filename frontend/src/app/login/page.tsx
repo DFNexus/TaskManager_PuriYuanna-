@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,14 @@ export default function LoginPage() {
           {/* Error Message */}
           {error && (
             <div className="mb-5 p-3 text-sm text-red-300 bg-red-950/50 border border-red-800/40 rounded-xl text-center">
-              {error}
+              <div>{error}</div>
+              {error.toLowerCase().includes('sign up') && (
+                <div className="mt-2">
+                  <Link href="/signup" className="text-[#22bcb4] hover:underline font-semibold text-xs">
+                    Lakukan Sign Up & Aktivasi Akun Sekarang &rarr;
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -108,10 +116,10 @@ export default function LoginPage() {
         {/* Bottom Section */}
         <div className="border-t border-white/10 px-8 py-5">
           <p className="text-center text-sm text-gray-500">
-            Belum memiliki akun?{' '}
-            <span className="text-[#22bcb4] font-medium cursor-default">
-              Hubungi Administrator
-            </span>
+            Belum aktivasi akun atau buat password?{' '}
+            <Link href="/signup" className="text-[#22bcb4] hover:text-[#1eaaa3] font-medium transition-colors">
+              Sign Up di sini
+            </Link>
           </p>
         </div>
       </div>

@@ -23,5 +23,9 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
 # Install production dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+# Clear and optimize Laravel cache for production
+RUN php artisan config:clear && php artisan cache:clear && php artisan view:clear
+RUN php artisan config:cache && php artisan route:cache
+
 # Run migrations then start Laravel server
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

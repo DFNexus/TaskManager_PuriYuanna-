@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +30,8 @@ interface User {
 }
 
 export default function StaffPage() {
+  const router = useRouter();
+  const currentUser = useAuthStore((state) => state.user);
   const [users, setUsers] = useState<User[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,8 +62,12 @@ export default function StaffPage() {
   };
 
   useEffect(() => {
+    if (currentUser && currentUser.role !== 'Admin') {
+      router.replace('/dashboard');
+      return;
+    }
     fetchData();
-  }, []);
+  }, [currentUser, router]);
 
   const resetForm = () => {
     setName('');

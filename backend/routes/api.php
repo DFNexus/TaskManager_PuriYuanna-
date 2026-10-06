@@ -57,12 +57,15 @@ Route::middleware('auth:api')->group(function () {
         Route::patch('tasks/{task}/assign', [TaskController::class, 'assign']);
     });
 
-    // Master data manipulation for Manager/Admin
+    // Unit master data manipulation (Manager, Admin)
     Route::middleware('role:Manager,Admin')->group(function () {
         Route::post('units', [UnitController::class, 'store']);
         Route::match(['put', 'patch'], 'units/{unit}', [UnitController::class, 'update']);
         Route::delete('units/{unit}', [UnitController::class, 'destroy']);
+    });
 
+    // User & Staff management, access rights, and reset registration (Admin ONLY)
+    Route::middleware('role:Admin')->group(function () {
         Route::post('users', [UserController::class, 'store']);
         Route::match(['put', 'patch'], 'users/{user}', [UserController::class, 'update']);
         Route::post('users/{user}/reset-registration', [UserController::class, 'resetRegistration']);

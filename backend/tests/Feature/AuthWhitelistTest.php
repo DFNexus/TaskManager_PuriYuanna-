@@ -173,4 +173,40 @@ class AuthWhitelistTest extends TestCase
         $this->assertNotNull($staff->password);
         $this->assertTrue($staff->is_registered);
     }
+
+    public function test_manager_cannot_manage_or_reset_user_accounts(): void
+    {
+        $manager = User::create([
+            'name' => 'General Manager',
+            'email' => 'gm@puriyuanna.com',
+            'role' => 'Manager',
+            'password' => bcrypt('password123'),
+            'status' => 'active',
+        ]);
+
+        $token = auth()->guard('api')->login($manager);
+
+        // Manager attempts to create a user account
+        $createRes = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/users', [
+                'name' => 'New User',
+                'email' => 'newuser@puriyuanna.com',
+                'role' => 'Staff',
+                'status' => 'active',
+            ]);
+        $createRes->assertStatus(403);
+
+        // Manager attempts to reset a user registration
+        $targetUser = User::create([
+            'name' => 'Target User',
+            'email' => 'target@puriyuanna.com',
+            'role' => 'Staff',
+            'password' => bcrypt('secret'),
+            'status' => 'active',
+        ]);
+
+        $resetRes = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson("/api/users/{$targetUser->id}/reset-registration");
+        $resetRes->assertStatus(403);
+    }
 }

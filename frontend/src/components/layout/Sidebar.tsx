@@ -34,6 +34,8 @@ export default function Sidebar() {
     ] : []),
     ...(user?.role === 'Manager' || user?.role === 'Admin' ? [
       { name: 'Manajemen Unit', href: '/dashboard/units', icon: Home },
+    ] : []),
+    ...(user?.role === 'Admin' ? [
       { name: 'Manajemen Staff', href: '/dashboard/staff', icon: Users },
     ] : []),
   ];

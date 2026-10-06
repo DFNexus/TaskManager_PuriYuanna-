@@ -49,6 +49,11 @@ export default function RoleGuard({ children }: { children: React.ReactNode }) {
       if (forbiddenForSPV.some((route) => pathname.startsWith(route))) {
         router.replace('/dashboard');
       }
+    } else if (role === 'Manager') {
+      const forbiddenForManager = ['/dashboard/staff'];
+      if (forbiddenForManager.some((route) => pathname.startsWith(route))) {
+        router.replace('/dashboard');
+      }
     }
   }, [mounted, user, pathname, router]);
 

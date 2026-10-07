@@ -79,9 +79,12 @@ jobs:
         DB_DATABASE: testing_db
         DB_USERNAME: root
         DB_PASSWORD: password
+        SESSION_DRIVER: array
+        CACHE_STORE: array
+        QUEUE_CONNECTION: sync
         
     - name: Run Migrations
-      run: php artisan migrate --env=testing --force
+      run: php artisan migrate --force
       env:
         DB_CONNECTION: pgsql
         DB_HOST: 127.0.0.1
@@ -89,6 +92,9 @@ jobs:
         DB_DATABASE: testing_db
         DB_USERNAME: root
         DB_PASSWORD: password
+        SESSION_DRIVER: array
+        CACHE_STORE: array
+        QUEUE_CONNECTION: sync
         
     - name: Execute Tests (PHPUnit)
       run: php artisan test
@@ -99,3 +105,7 @@ jobs:
         DB_DATABASE: testing_db
         DB_USERNAME: root
         DB_PASSWORD: password
+        SESSION_DRIVER: array
+        CACHE_STORE: array
+        QUEUE_CONNECTION: sync
+

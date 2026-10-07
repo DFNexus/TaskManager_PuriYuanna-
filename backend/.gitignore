@@ -25,3 +25,13 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Laravel generated cache files (keep folder via .gitkeep)
+/bootstrap/cache/*.php
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/cache/data/*
+!/bootstrap/cache/.gitkeep
+!/storage/framework/sessions/.gitkeep
+!/storage/framework/views/.gitkeep
+!/storage/framework/cache/data/.gitkeep

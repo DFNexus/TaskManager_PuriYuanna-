@@ -23,5 +23,5 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
 # Install production dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Run migrations + seed, then start Laravel server
-CMD php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Run migrations (no seeding on deploy), then start Laravel server even if migrate reports an error
+CMD php artisan migrate --force ; php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

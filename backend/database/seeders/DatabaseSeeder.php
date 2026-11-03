@@ -15,13 +15,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $unitGH = Unit::firstOrCreate(
-            ['nama' => 'Puri Yuanna Guest House'],
-            ['tipe' => 'GH', 'alamat' => 'Lantai 1']
+            ['nama' => 'Puri Yuanna Guest House', 'tipe' => 'GH'],
+            ['alamat' => 'Lantai 1']
         );
 
         $unitKost = Unit::firstOrCreate(
-            ['nama' => 'Puri Yuanna Kost'],
-            ['tipe' => 'Kost', 'alamat' => 'Lantai Atas']
+            ['nama' => 'Puri Yuanna Kost', 'tipe' => 'Kost'],
+            ['alamat' => 'Lantai Atas']
         );
 
         User::firstOrCreate(

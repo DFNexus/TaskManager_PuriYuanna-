@@ -38,7 +38,13 @@ export function getStorageUrl(path?: string | null): string {
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
     return path;
   }
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+  // If in browser, adapt to current host if user accesses via non-localhost IP/domain
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    apiUrl = apiUrl.replace(/localhost|127\.0\.0\.1/, window.location.hostname);
+  }
+
   const backendBase = apiUrl.replace(/\/api\/?$/, '');
   let cleanPath = path.startsWith('/') ? path : `/${path}`;
   if (!cleanPath.startsWith('/storage/')) {

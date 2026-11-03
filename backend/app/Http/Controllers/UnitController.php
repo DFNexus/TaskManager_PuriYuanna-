@@ -9,7 +9,15 @@ class UnitController extends Controller
 {
     public function index()
     {
-        return response()->json(Unit::with('owner')->get());
+        $units = Unit::with('owner')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->unique(function ($item) {
+                return trim(strtolower($item->nama)) . '|' . $item->tipe;
+            })
+            ->values();
+
+        return response()->json($units);
     }
 
     public function store(Request $request)

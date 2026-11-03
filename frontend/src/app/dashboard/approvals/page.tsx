@@ -22,7 +22,8 @@ import {
   FileText,
   User,
   History,
-  Building2
+  Building2,
+  ExternalLink
 } from 'lucide-react';
 
 interface ChecklistItem {
@@ -650,19 +651,28 @@ export default function ApprovalsPage() {
 
       {/* Modal: Zoom Foto Bukti */}
       <Dialog open={!!previewPhoto} onOpenChange={() => setPreviewPhoto(null)}>
-        <DialogContent className="sm:max-w-[650px] p-2">
-          <DialogHeader className="p-3 pb-0">
-            <DialogTitle className="text-base">Foto Bukti Pengerjaan</DialogTitle>
+        <DialogContent className="sm:max-w-[650px] p-4">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-base font-bold flex items-center justify-between">
+              <span>Foto Bukti Pengerjaan</span>
+              {previewPhoto && (
+                <a
+                  href={getStorageUrl(previewPhoto)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-normal text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> Buka Tab Baru
+                </a>
+              )}
+            </DialogTitle>
           </DialogHeader>
           {previewPhoto && (
-            <div className="p-3">
+            <div className="flex flex-col items-center justify-center bg-black/5 dark:bg-black/30 rounded-lg p-2 overflow-hidden border">
               <img
                 src={getStorageUrl(previewPhoto)}
                 alt="Foto Bukti"
-                className="w-full max-h-[75vh] object-contain rounded-md border"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.opacity = '0.3';
-                }}
+                className="w-full max-h-[70vh] object-contain rounded-md"
               />
             </div>
           )}

@@ -16,6 +16,8 @@ import { Plus, Pencil, Trash2, RotateCcw } from 'lucide-react';
 interface Unit {
   id: number;
   nama: string;
+  tipe?: 'GH' | 'Kost' | string;
+  alamat?: string | null;
 }
 
 interface User {
@@ -53,7 +55,16 @@ export default function StaffPage() {
         api.get('/units')
       ]);
       setUsers(usersRes.data);
-      setUnits(unitsRes.data);
+      if (Array.isArray(unitsRes?.data)) {
+        const seen = new Set<string>();
+        const uniqueUnits = unitsRes.data.filter((u: Unit) => {
+          const key = `${(u.nama || '').trim().toLowerCase()}-${u.tipe}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setUnits(uniqueUnits);
+      }
     } catch (e) {
       console.error(e);
     } finally {

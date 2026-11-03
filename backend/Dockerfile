@@ -24,4 +24,4 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
 RUN composer install --no-dev --optimize-autoloader
 
 # Run migrations + seed, then start Laravel server
-CMD php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+CMD php artisan storage:link || true && php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}

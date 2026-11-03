@@ -11,6 +11,20 @@ use App\Http\Controllers\ChecklistItemController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\NotificationController;
 
+Route::get('storage/{path}', function ($path) {
+    $disk = \Illuminate\Support\Facades\Storage::disk('public');
+    if (!$disk->exists($path)) {
+        abort(404);
+    }
+    $fullPath = $disk->path($path);
+    $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+    return response()->file($fullPath, [
+        'Content-Type' => $mime,
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
+    ]);
+})->where('path', '.*');
+
 Route::group(['prefix' => 'auth'], function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('register', [AuthController::class, 'register']);

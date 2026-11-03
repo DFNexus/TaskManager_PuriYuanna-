@@ -17,4 +17,9 @@ class Unit extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'unit_id');
+    }
 }

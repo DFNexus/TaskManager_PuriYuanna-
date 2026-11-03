@@ -26,7 +26,8 @@ import {
   Camera,
   Upload,
   Image as ImageIcon,
-  FileText
+  FileText,
+  Building2
 } from 'lucide-react';
 
 interface ChecklistItem {
@@ -48,6 +49,13 @@ interface User {
   status?: string;
 }
 
+interface Unit {
+  id: number;
+  nama: string;
+  tipe: string;
+  alamat?: string | null;
+}
+
 interface Task {
   id: number;
   judul: string;
@@ -56,6 +64,8 @@ interface Task {
   prioritas: 'low' | 'medium' | 'high';
   deadline: string;
   assigned_to: User;
+  unit_id?: number | null;
+  unit?: Unit | null;
   created_by: { id: number; name: string };
   status: 'pending' | 'in_progress' | 'waiting_approval' | 'done' | 'rejected';
   is_recurring: boolean;
@@ -66,6 +76,7 @@ interface Task {
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [staffList, setStaffList] = useState<User[]>([]);
+  const [unitsList, setUnitsList] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
@@ -73,6 +84,7 @@ export default function TasksPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPrioritas, setFilterPrioritas] = useState('all');
   const [filterKategori, setFilterKategori] = useState('all');
+  const [filterUnit, setFilterUnit] = useState('all');
 
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -88,7 +100,8 @@ export default function TasksPage() {
   const [prioritas, setPrioritas] = useState<'low' | 'medium' | 'high'>('medium');
   const [deadline, setDeadline] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
-  const [checklistItems, setChecklistItems] = useState<{ label: string; tipe: 'required' | 'optional' }[]>([
+  const [unitId, setUnitId] = useState('');
+  const [checklistItems, setChecklistItems] = useState<{ id?: number; label: string; tipe: 'required' | 'optional'; is_checked?: boolean }[]>([
     { label: '', tipe: 'required' }
   ]);
 
@@ -156,10 +169,14 @@ export default function TasksPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [tasksRes, usersRes] = await Promise.all([
+      const [tasksRes, usersRes, unitsRes] = await Promise.all([
         api.get('/tasks'),
         api.get('/users').catch((err) => {
           console.warn('Could not fetch staff list:', err.response?.status || err.message);
+          return { data: [] };
+        }),
+        api.get('/units').catch((err) => {
+          console.warn('Could not fetch units list:', err.response?.status || err.message);
           return { data: [] };
         })
       ]);
@@ -167,6 +184,9 @@ export default function TasksPage() {
       // Filter only active staff/users who can be assigned tasks
       if (Array.isArray(usersRes?.data)) {
         setStaffList(usersRes.data.filter((u: User) => u.status === 'active' || !u.status));
+      }
+      if (Array.isArray(unitsRes?.data)) {
+        setUnitsList(unitsRes.data);
       }
     } catch (e) {
       console.error('Error fetching data:', e);
@@ -192,6 +212,7 @@ export default function TasksPage() {
     setPrioritas('medium');
     setDeadline('');
     setAssignedTo('');
+    setUnitId('');
     setChecklistItems([{ label: '', tipe: 'required' }]);
     setEditingId(null);
   };
@@ -214,9 +235,15 @@ export default function TasksPage() {
       .slice(0, 16);
     setDeadline(formattedDeadline);
     setAssignedTo(task.assigned_to?.id ? task.assigned_to.id.toString() : '');
+    setUnitId(task.unit_id ? task.unit_id.toString() : (task.unit?.id ? task.unit.id.toString() : ''));
     setChecklistItems(
       task.checklist_items && task.checklist_items.length > 0
-        ? task.checklist_items.map((i) => ({ label: i.label, tipe: i.tipe }))
+        ? task.checklist_items.map((i) => ({
+            id: i.id,
+            label: i.label,
+            tipe: i.tipe,
+            is_checked: i.is_checked,
+          }))
         : [{ label: '', tipe: 'required' }]
     );
     setIsCreateOpen(true);
@@ -231,6 +258,44 @@ export default function TasksPage() {
     setSelectedTask(task);
     setNewAssignee(task.assigned_to?.id ? task.assigned_to.id.toString() : '');
     setIsAssignOpen(true);
+  };
+
+  // Admin/Manager toggle checklist item in detail modal
+  const handleToggleAdminCheck = async (item: ChecklistItem) => {
+    if (!selectedTask || !item.id) return;
+    const newChecked = !item.is_checked;
+
+    setSelectedTask((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        checklist_items: prev.checklist_items.map((i) =>
+          i.id === item.id ? { ...i, is_checked: newChecked } : i
+        ),
+      };
+    });
+
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id !== selectedTask.id) return t;
+        return {
+          ...t,
+          checklist_items: t.checklist_items.map((i) =>
+            i.id === item.id ? { ...i, is_checked: newChecked } : i
+          ),
+        };
+      })
+    );
+
+    try {
+      await api.patch(`/checklist-items/${item.id}`, {
+        is_checked: newChecked,
+      });
+    } catch (err: any) {
+      console.error('Error toggling checklist:', err);
+      alert(err.response?.data?.message || 'Gagal mengubah status checklist.');
+      fetchData();
+    }
   };
 
   // Checklist builder helpers
@@ -263,10 +328,17 @@ export default function TasksPage() {
     const filteredItems = checklistItems
       .filter((i) => i.label.trim() !== '')
       .map((item, index) => ({
+        ...(item.id ? { id: item.id } : {}),
         label: item.label.trim(),
         tipe: item.tipe,
         urutan: index,
+        ...(typeof item.is_checked === 'boolean' ? { is_checked: item.is_checked } : {}),
       }));
+
+    if (filteredItems.length === 0) {
+      alert('Silakan isi minimal 1 item checklist untuk dikerjakan.');
+      return;
+    }
 
     const payload = {
       judul,
@@ -275,6 +347,7 @@ export default function TasksPage() {
       prioritas,
       deadline,
       assigned_to: parseInt(assignedTo),
+      unit_id: unitId && unitId !== 'none' ? parseInt(unitId) : null,
       checklist_items: filteredItems,
     };
 
@@ -326,15 +399,21 @@ export default function TasksPage() {
       const matchSearch =
         task.judul.toLowerCase().includes(search.toLowerCase()) ||
         (task.deskripsi && task.deskripsi.toLowerCase().includes(search.toLowerCase())) ||
-        (task.assigned_to?.name && task.assigned_to.name.toLowerCase().includes(search.toLowerCase()));
+        (task.assigned_to?.name && task.assigned_to.name.toLowerCase().includes(search.toLowerCase())) ||
+        (task.unit?.nama && task.unit.nama.toLowerCase().includes(search.toLowerCase()));
 
       const matchStatus = filterStatus === 'all' || task.status === filterStatus;
       const matchPrioritas = filterPrioritas === 'all' || task.prioritas === filterPrioritas;
       const matchKategori = filterKategori === 'all' || task.kategori === filterKategori;
+      const matchUnit =
+        filterUnit === 'all' ||
+        (filterUnit === 'none' && !task.unit_id && !task.unit) ||
+        (task.unit_id?.toString() === filterUnit) ||
+        (task.unit?.id?.toString() === filterUnit);
 
-      return matchSearch && matchStatus && matchPrioritas && matchKategori;
+      return matchSearch && matchStatus && matchPrioritas && matchKategori && matchUnit;
     });
-  }, [tasks, search, filterStatus, filterPrioritas, filterKategori]);
+  }, [tasks, search, filterStatus, filterPrioritas, filterKategori, filterUnit]);
 
   // Metric Stats
   const metrics = useMemo(() => {
@@ -474,6 +553,22 @@ export default function TasksPage() {
             </SelectContent>
           </Select>
 
+          {/* Unit Filter */}
+          <Select value={filterUnit} onValueChange={(val) => val && setFilterUnit(val)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Unit Properti" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Unit</SelectItem>
+              <SelectItem value="none">Umum (Tanpa Unit)</SelectItem>
+              {unitsList.map((unit) => (
+                <SelectItem key={unit.id} value={unit.id.toString()}>
+                  {unit.nama}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {/* Category Filter */}
           <Select value={filterKategori} onValueChange={(val) => val && setFilterKategori(val)}>
             <SelectTrigger className="w-[140px]">
@@ -497,6 +592,7 @@ export default function TasksPage() {
           <TableHeader>
             <TableRow className="bg-gray-50/50 dark:bg-gray-800/50">
               <TableHead className="font-semibold">Judul Task</TableHead>
+              <TableHead className="font-semibold">Unit Properti</TableHead>
               <TableHead className="font-semibold">Kategori & Prioritas</TableHead>
               <TableHead className="font-semibold">Ditugaskan Ke</TableHead>
               <TableHead className="font-semibold">Deadline</TableHead>
@@ -508,13 +604,13 @@ export default function TasksPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center h-32 text-muted-foreground">
                   Memuat data task...
                 </TableCell>
               </TableRow>
             ) : filteredTasks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center h-32 text-muted-foreground">
                   Belum ada task yang sesuai dengan kriteria filter.
                 </TableCell>
               </TableRow>
@@ -525,7 +621,7 @@ export default function TasksPage() {
 
                 return (
                   <TableRow key={task.id} className="hover:bg-gray-50/60 dark:hover:bg-gray-800/60 transition-colors">
-                    <TableCell className="max-w-[220px]">
+                    <TableCell className="max-w-[200px]">
                       <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                         {task.judul}
                       </div>
@@ -533,6 +629,19 @@ export default function TasksPage() {
                         <div className="text-xs text-muted-foreground truncate mt-0.5">
                           {task.deskripsi}
                         </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <Building2 className="h-3.5 w-3.5 text-[#22bcb4] shrink-0" />
+                        <span className={task.unit?.nama ? 'font-medium text-gray-900 dark:text-gray-100' : 'text-muted-foreground italic'}>
+                          {task.unit?.nama || 'Umum'}
+                        </span>
+                      </div>
+                      {task.unit?.tipe && (
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {task.unit.tipe}
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -723,6 +832,32 @@ export default function TasksPage() {
             </div>
 
             <div className="space-y-2">
+              <Label>Unit Properti yang Ditugaskan (Opsional)</Label>
+              <Select
+                value={unitId || 'none'}
+                onValueChange={(val) => setUnitId(!val || val === 'none' ? '' : val)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Unit Properti (Opsional / Umum)">
+                    {(value: string | null) => {
+                      if (!value || value === 'none') return '-- Umum / Seluruh Area --';
+                      const u = unitsList.find((unit) => unit.id.toString() === value);
+                      return u ? `${u.nama} (${u.tipe})` : 'Pilih Unit Properti';
+                    }}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- Umum / Seluruh Area --</SelectItem>
+                  {unitsList.map((unit) => (
+                    <SelectItem key={unit.id} value={unit.id.toString()}>
+                      {unit.nama} ({unit.tipe})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>Deskripsi / Catatan Tambahan (Opsional)</Label>
               <textarea
                 rows={3}
@@ -825,23 +960,36 @@ export default function TasksPage() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-muted-foreground block">Batas Waktu (Deadline)</span>
-                  <span className="font-semibold">
-                    {new Date(selectedTask.deadline).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </span>
-                  <span className="text-xs text-muted-foreground block">
-                    Pukul{' '}
-                    {new Date(selectedTask.deadline).toLocaleTimeString('id-ID', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}{' '}
-                    WIB
-                  </span>
+                  <span className="text-xs text-muted-foreground block">Unit Properti</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Building2 className="h-4 w-4 text-[#22bcb4] shrink-0" />
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      {selectedTask.unit?.nama || 'Umum / Seluruh Area'}
+                    </span>
+                  </div>
+                  {selectedTask.unit?.tipe && (
+                    <span className="text-xs text-muted-foreground block">
+                      Tipe: {selectedTask.unit.tipe} {selectedTask.unit.alamat ? `· ${selectedTask.unit.alamat}` : ''}
+                    </span>
+                  )}
                 </div>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm">
+                <span className="text-xs text-muted-foreground block">Batas Waktu (Deadline)</span>
+                <span className="font-semibold">
+                  {new Date(selectedTask.deadline).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}{' '}
+                  · Pukul{' '}
+                  {new Date(selectedTask.deadline).toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}{' '}
+                  WIB
+                </span>
               </div>
 
               {selectedTask.deskripsi && (
@@ -854,8 +1002,9 @@ export default function TasksPage() {
               )}
 
               <div>
-                <h4 className="text-sm font-semibold mb-2">
-                  Daftar Checklist ({selectedTask.checklist_items?.length || 0} Item):
+                <h4 className="text-sm font-semibold mb-2 flex items-center justify-between">
+                  <span>Daftar Checklist ({selectedTask.checklist_items?.length || 0} Item):</span>
+                  <span className="text-xs text-muted-foreground font-normal">Klik kotak untuk ubah status</span>
                 </h4>
                 <div className="space-y-2">
                   {selectedTask.checklist_items && selectedTask.checklist_items.length > 0 ? (
@@ -870,15 +1019,18 @@ export default function TasksPage() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-start gap-2.5">
-                            <span
-                              className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAdminCheck(item)}
+                              className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all cursor-pointer ${
                                 item.is_checked
-                                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                                  : 'border-gray-300 dark:border-gray-600'
+                                  ? 'bg-emerald-500 border-emerald-500 text-white shadow-xs'
+                                  : 'border-gray-300 dark:border-gray-600 hover:border-emerald-500'
                               }`}
+                              title="Klik untuk mengubah status centang"
                             >
-                              {item.is_checked && <CheckCircle2 className="h-3 w-3" />}
-                            </span>
+                              {item.is_checked && <CheckCircle2 className="h-3.5 w-3.5" />}
+                            </button>
                             <div>
                               <span
                                 className={

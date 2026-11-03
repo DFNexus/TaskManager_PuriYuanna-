@@ -20,14 +20,19 @@ class TaskController extends Controller
         $query = Task::with([
             'assignedTo:id,name,role,email',
             'createdBy:id,name',
-            'checklistItems'
+            'checklistItems',
+            'unit:id,nama,tipe,alamat'
         ]);
 
         // Staf can only see tasks assigned to them
-        if ($user && $user->role === 'Staff') {
+        if ($user && strcasecmp($user->role, 'Staff') === 0) {
             $query->where('assigned_to', $user->id);
         } elseif ($request->filled('assigned_to')) {
             $query->where('assigned_to', $request->assigned_to);
+        }
+
+        if ($request->filled('unit_id') && $request->unit_id !== 'all') {
+            $query->where('unit_id', $request->unit_id);
         }
 
         if ($request->filled('status') && $request->status !== 'all') {
@@ -64,6 +69,7 @@ class TaskController extends Controller
             'prioritas' => 'required|in:low,medium,high',
             'deadline' => 'required|date',
             'assigned_to' => 'required|exists:users,id',
+            'unit_id' => 'nullable|exists:units,id',
             'is_recurring' => 'nullable|boolean',
             'checklist_items' => 'nullable|array',
             'checklist_items.*.label' => 'required|string|max:255',
@@ -79,6 +85,7 @@ class TaskController extends Controller
                 'prioritas' => $validated['prioritas'],
                 'deadline' => $validated['deadline'],
                 'assigned_to' => $validated['assigned_to'],
+                'unit_id' => $validated['unit_id'] ?? null,
                 'status' => 'pending',
                 'is_recurring' => $validated['is_recurring'] ?? false,
                 'created_by' => Auth::id(),
@@ -114,14 +121,14 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Task berhasil dibuat',
-            'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems'])
+            'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'unit:id,nama,tipe,alamat'])
         ], 201);
     }
 
     public function show(Task $task)
     {
         $user = Auth::user();
-        if ($user && $user->role === 'Staff' && $task->assigned_to !== $user->id) {
+        if ($user && strcasecmp($user->role, 'Staff') === 0 && (int)$task->assigned_to !== (int)$user->id) {
             return response()->json(['message' => 'Unauthorized access to task'], 403);
         }
 
@@ -129,6 +136,7 @@ class TaskController extends Controller
             'assignedTo:id,name,role,email',
             'createdBy:id,name',
             'checklistItems',
+            'unit:id,nama,tipe,alamat',
             'reports.approvalLogs.user:id,name,role',
             'reports.submittedBy:id,name',
         ]));
@@ -143,26 +151,53 @@ class TaskController extends Controller
             'prioritas' => 'sometimes|required|in:low,medium,high',
             'deadline' => 'sometimes|required|date',
             'assigned_to' => 'sometimes|required|exists:users,id',
+            'unit_id' => 'nullable|exists:units,id',
             'status' => 'sometimes|required|in:pending,in_progress,waiting_approval,done,rejected',
             'checklist_items' => 'nullable|array',
+            'checklist_items.*.id' => 'nullable|integer',
             'checklist_items.*.label' => 'required|string|max:255',
             'checklist_items.*.tipe' => 'required|in:required,optional',
             'checklist_items.*.urutan' => 'nullable|integer',
+            'checklist_items.*.is_checked' => 'nullable|boolean',
         ]);
 
         DB::transaction(function () use ($validated, $task) {
             $task->update($validated);
 
             if (isset($validated['checklist_items'])) {
-                // Remove existing items and insert updated ones
-                $task->checklistItems()->delete();
+                $incomingItemIds = collect($validated['checklist_items'])
+                    ->pluck('id')
+                    ->filter()
+                    ->toArray();
+
+                // Delete items that were removed in the form
+                $task->checklistItems()
+                    ->whereNotIn('id', $incomingItemIds)
+                    ->delete();
+
                 foreach ($validated['checklist_items'] as $index => $item) {
+                    if (!empty($item['id'])) {
+                        $existing = ChecklistItem::where('task_id', $task->id)->find($item['id']);
+                        if ($existing) {
+                            $updateData = [
+                                'label' => $item['label'],
+                                'tipe' => $item['tipe'] ?? 'required',
+                                'urutan' => $item['urutan'] ?? $index,
+                            ];
+                            if (array_key_exists('is_checked', $item)) {
+                                $updateData['is_checked'] = (bool)$item['is_checked'];
+                            }
+                            $existing->update($updateData);
+                            continue;
+                        }
+                    }
+
                     ChecklistItem::create([
                         'task_id' => $task->id,
                         'label' => $item['label'],
                         'tipe' => $item['tipe'] ?? 'required',
                         'urutan' => $item['urutan'] ?? $index,
-                        'is_checked' => false,
+                        'is_checked' => $item['is_checked'] ?? false,
                     ]);
                 }
             }
@@ -170,7 +205,7 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Task berhasil diupdate',
-            'data' => $task->fresh(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems'])
+            'data' => $task->fresh(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'unit:id,nama,tipe,alamat'])
         ]);
     }
 
@@ -201,7 +236,7 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Penugasan staff berhasil diperbarui',
-            'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems'])
+            'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'unit:id,nama,tipe,alamat'])
         ]);
     }
 
@@ -210,7 +245,7 @@ class TaskController extends Controller
         $user = Auth::user();
 
         // Check permission: assigned staff, Manager, or Admin
-        if ($user->role === 'Staff' && $task->assigned_to !== $user->id) {
+        if (strcasecmp($user->role, 'Staff') === 0 && (int)$task->assigned_to !== (int)$user->id) {
             return response()->json(['message' => 'Anda tidak memiliki hak akses untuk melaporkan task ini.'], 403);
         }
 
@@ -260,7 +295,7 @@ class TaskController extends Controller
         return response()->json([
             'message' => 'Laporan penyelesaian tugas berhasil dikirim dan menunggu verifikasi supervisor.',
             'report' => $report,
-            'task' => $task->fresh(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'reports'])
+            'task' => $task->fresh(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'reports', 'unit:id,nama,tipe,alamat'])
         ]);
     }
 }

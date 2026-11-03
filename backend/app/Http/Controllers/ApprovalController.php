@@ -15,9 +15,10 @@ class ApprovalController extends Controller
     public function index(Request $request)
     {
         $query = TaskReport::with([
-            'task:id,judul,deskripsi,kategori,prioritas,deadline,assigned_to,status',
+            'task:id,judul,deskripsi,kategori,prioritas,deadline,assigned_to,status,unit_id',
             'task.assignedTo:id,name,role',
             'task.checklistItems',
+            'task.unit:id,nama,tipe',
             'submittedBy:id,name,role',
             'approvalLogs.user:id,name,role',
         ]);
@@ -43,9 +44,10 @@ class ApprovalController extends Controller
     public function show(TaskReport $report)
     {
         return response()->json($report->load([
-            'task:id,judul,deskripsi,kategori,prioritas,deadline,assigned_to,status',
+            'task:id,judul,deskripsi,kategori,prioritas,deadline,assigned_to,status,unit_id',
             'task.assignedTo:id,name,role',
             'task.checklistItems',
+            'task.unit:id,nama,tipe',
             'submittedBy:id,name,role',
             'approvalLogs.user:id,name,role',
         ]));

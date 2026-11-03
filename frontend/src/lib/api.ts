@@ -40,7 +40,10 @@ export function getStorageUrl(path?: string | null): string {
   }
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
   const backendBase = apiUrl.replace(/\/api\/?$/, '');
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  let cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (!cleanPath.startsWith('/storage/')) {
+    cleanPath = `/storage${cleanPath}`;
+  }
   return `${backendBase}${cleanPath}`;
 }
 

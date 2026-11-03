@@ -22,7 +22,8 @@ import {
   RotateCcw,
   Sparkles,
   Camera,
-  Eye
+  Eye,
+  Building2
 } from 'lucide-react';
 
 interface ChecklistItem {
@@ -34,6 +35,13 @@ interface ChecklistItem {
   urutan: number;
   catatan: string | null;
   foto_url: string | null;
+}
+
+interface Unit {
+  id: number;
+  nama: string;
+  tipe?: string;
+  alamat?: string | null;
 }
 
 interface ApprovalLog {
@@ -62,6 +70,7 @@ interface Task {
   status: 'pending' | 'in_progress' | 'waiting_approval' | 'done' | 'rejected';
   created_by: { id: number; name: string };
   checklist_items: ChecklistItem[];
+  unit?: Unit | null;
   reports?: TaskReport[];
 }
 
@@ -349,6 +358,18 @@ export default function TaskExecutionPage() {
             {task.judul}
           </CardTitle>
 
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1.5">
+            <Building2 className="h-4 w-4 text-[#22bcb4] shrink-0" />
+            <span className="font-semibold text-gray-800 dark:text-gray-200">
+              Unit: {task.unit?.nama || 'Umum / Seluruh Area'}
+            </span>
+            {task.unit?.tipe && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-mono">
+                {task.unit.tipe}
+              </span>
+            )}
+          </div>
+
           {task.deskripsi && (
             <div className="mt-3 p-3.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg border text-sm text-gray-700 dark:text-gray-300">
               <div className="font-semibold text-xs text-muted-foreground mb-1 uppercase tracking-wide">
@@ -540,6 +561,9 @@ export default function TaskExecutionPage() {
                                 src={getStorageUrl(item.foto_url)}
                                 alt={`Bukti ${item.label}`}
                                 className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.opacity = '0.3';
+                                }}
                               />
                               <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                                 <Eye className="h-4 w-4" />
@@ -712,6 +736,9 @@ export default function TaskExecutionPage() {
                 src={getStorageUrl(previewImageUrl)}
                 alt="Bukti Penyelesaian"
                 className="w-full max-h-[75vh] object-contain rounded-md border"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.opacity = '0.3';
+                }}
               />
             </div>
           )}

@@ -21,7 +21,8 @@ import {
   Image as ImageIcon,
   FileText,
   User,
-  History
+  History,
+  Building2
 } from 'lucide-react';
 
 interface ChecklistItem {
@@ -58,6 +59,7 @@ interface TaskReport {
     status: string;
     assigned_to: { id: number; name: string; role: string };
     checklist_items: ChecklistItem[];
+    unit?: { id: number; nama: string; tipe?: string } | null;
   };
   approval_logs: ApprovalLog[];
 }
@@ -329,9 +331,12 @@ export default function ApprovalsPage() {
                       <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                         {report.task?.judul}
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        Kategori: {report.task?.kategori}
-                      </span>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                        <Building2 className="h-3 w-3 text-[#22bcb4] shrink-0" />
+                        <span>{report.task?.unit?.nama || 'Umum'}</span>
+                        <span className="opacity-40">·</span>
+                        <span>{report.task?.kategori}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="font-medium text-sm">
@@ -417,7 +422,23 @@ export default function ApprovalsPage() {
           </DialogHeader>
 
           {selectedReport && (
-            <div className="space-y-5 pt-2">
+            <div className="space-y-4 pt-2">
+              {/* Unit Properti */}
+              <div className="p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg border text-xs flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-[#22bcb4]" />
+                  <span className="font-semibold">Unit Properti:</span>
+                  <span className="text-gray-800 dark:text-gray-200">
+                    {selectedReport.task?.unit?.nama || 'Umum / Seluruh Area'}
+                  </span>
+                </div>
+                {selectedReport.task?.unit?.tipe && (
+                  <span className="px-2 py-0.5 rounded bg-white dark:bg-gray-900 border text-[11px] font-mono">
+                    {selectedReport.task.unit.tipe}
+                  </span>
+                )}
+              </div>
+
               {/* Catatan Staff */}
               {selectedReport.catatan_staff && (
                 <div className="p-3 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 rounded-lg text-sm">
@@ -468,6 +489,9 @@ export default function ApprovalsPage() {
                               src={getStorageUrl(item.foto_url)}
                               alt={`Bukti ${item.label}`}
                               className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.opacity = '0.3';
+                              }}
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                               <Eye className="h-3 w-3" />
@@ -636,6 +660,9 @@ export default function ApprovalsPage() {
                 src={getStorageUrl(previewPhoto)}
                 alt="Foto Bukti"
                 className="w-full max-h-[75vh] object-contain rounded-md border"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.opacity = '0.3';
+                }}
               />
             </div>
           )}

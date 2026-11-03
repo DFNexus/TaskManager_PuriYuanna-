@@ -14,13 +14,13 @@ class ChecklistItemController extends Controller
         $user = Auth::user();
         $task = $checklistItem->task;
 
-        // Check permission: assigned staff, Manager, or Admin
-        if ($user->role === 'Staff' && $task->assigned_to !== $user->id) {
+        // Check permission: assigned staff, SPV, Manager, or Admin
+        if (strcasecmp($user->role, 'Staff') === 0 && (int)$task->assigned_to !== (int)$user->id) {
             return response()->json(['message' => 'Anda tidak memiliki hak akses untuk mengubah checklist ini.'], 403);
         }
 
         $validated = $request->validate([
-            'is_checked' => 'sometimes|required|boolean',
+            'is_checked' => 'sometimes|boolean',
             'catatan' => 'nullable|string',
         ]);
 
@@ -50,7 +50,7 @@ class ChecklistItemController extends Controller
         $user = Auth::user();
         $task = $checklistItem->task;
 
-        if ($user->role === 'Staff' && $task->assigned_to !== $user->id) {
+        if (strcasecmp($user->role, 'Staff') === 0 && (int)$task->assigned_to !== (int)$user->id) {
             return response()->json(['message' => 'Anda tidak memiliki hak akses untuk mengunggah foto pada checklist ini.'], 403);
         }
 

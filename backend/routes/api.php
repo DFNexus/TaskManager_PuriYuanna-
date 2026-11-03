@@ -28,9 +28,11 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
-    // Read tasks (Staff views their own, Manager/Admin/SPV views all)
+    // Read tasks & units (All authenticated users)
     Route::get('tasks', [TaskController::class, 'index']);
     Route::get('tasks/{task}', [TaskController::class, 'show']);
+    Route::get('units', [UnitController::class, 'index']);
+    Route::get('units/{unit}', [UnitController::class, 'show']);
 
     // Task Execution & Reporting (Staff & Manager)
     Route::patch('checklist-items/{checklistItem}', [ChecklistItemController::class, 'update']);
@@ -44,11 +46,9 @@ Route::middleware('auth:api')->group(function () {
         Route::post('reports/{report}/approve', [ApprovalController::class, 'approve']);
         Route::post('reports/{report}/reject', [ApprovalController::class, 'reject']);
 
-        // View staff and units
+        // View staff
         Route::get('users', [UserController::class, 'index']);
         Route::get('users/{user}', [UserController::class, 'show']);
-        Route::get('units', [UnitController::class, 'index']);
-        Route::get('units/{unit}', [UnitController::class, 'show']);
 
         // Task creation & assignment
         Route::post('tasks', [TaskController::class, 'store']);

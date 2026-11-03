@@ -11,7 +11,7 @@ class Task extends Model
 
     protected $fillable = [
         'judul', 'deskripsi', 'kategori', 'prioritas', 'deadline', 
-        'assigned_to', 'status', 'is_recurring', 'created_by'
+        'assigned_to', 'unit_id', 'status', 'is_recurring', 'created_by'
     ];
 
     protected function casts(): array
@@ -20,6 +20,11 @@ class Task extends Model
             'is_recurring' => 'boolean',
             'deadline' => 'datetime',
         ];
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 
     public function assignedTo()

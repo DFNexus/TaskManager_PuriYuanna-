@@ -16,7 +16,8 @@ import {
   ArrowRight,
   ListTodo,
   AlertTriangle,
-  Play
+  Play,
+  Building2
 } from 'lucide-react';
 
 interface ChecklistItem {
@@ -24,6 +25,12 @@ interface ChecklistItem {
   label: string;
   tipe: 'required' | 'optional';
   is_checked: boolean;
+}
+
+interface Unit {
+  id: number;
+  nama: string;
+  tipe?: string;
 }
 
 interface Task {
@@ -36,6 +43,7 @@ interface Task {
   status: 'pending' | 'in_progress' | 'waiting_approval' | 'done' | 'rejected';
   created_by: { id: number; name: string };
   checklist_items: ChecklistItem[];
+  unit?: Unit | null;
 }
 
 export default function MyTasksPage() {
@@ -96,7 +104,8 @@ export default function MyTasksPage() {
       const matchSearch =
         task.judul.toLowerCase().includes(search.toLowerCase()) ||
         (task.deskripsi && task.deskripsi.toLowerCase().includes(search.toLowerCase())) ||
-        task.kategori.toLowerCase().includes(search.toLowerCase());
+        task.kategori.toLowerCase().includes(search.toLowerCase()) ||
+        (task.unit?.nama && task.unit.nama.toLowerCase().includes(search.toLowerCase()));
 
       const matchStatus = filterStatus === 'all' || task.status === filterStatus;
       const matchPrioritas = filterPrioritas === 'all' || task.prioritas === filterPrioritas;
@@ -251,8 +260,19 @@ export default function MyTasksPage() {
                   <CardTitle className="text-lg font-bold mt-2 text-gray-900 dark:text-gray-100">
                     {task.judul}
                   </CardTitle>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                    <Building2 className="h-3.5 w-3.5 text-[#22bcb4] shrink-0" />
+                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                      {task.unit?.nama || 'Umum / Seluruh Area'}
+                    </span>
+                    {task.unit?.tipe && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800">
+                        {task.unit.tipe}
+                      </span>
+                    )}
+                  </div>
                   {task.deskripsi && (
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1.5">
                       {task.deskripsi}
                     </p>
                   )}

@@ -126,16 +126,21 @@ export default function SignupPage() {
             <div className="space-y-4">
               {/* Whitelisted Email Field */}
               <div>
-                <label className="block text-sm font-medium text-white mb-1.5">
+                <label htmlFor="signup-email" className="block text-sm font-medium text-white mb-1.5">
                   Email Terdaftar
                 </label>
                 <Input
                   id="signup-email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   placeholder="nama@puriyuanna.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-sm"
+                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-base md:text-sm"
                   required
                 />
                 <p className="text-[11px] text-gray-500 mt-1">
@@ -145,48 +150,54 @@ export default function SignupPage() {
 
               {/* Name Field */}
               <div>
-                <label className="block text-sm font-medium text-white mb-1.5">
+                <label htmlFor="signup-name" className="block text-sm font-medium text-white mb-1.5">
                   Nama Lengkap
                 </label>
                 <Input
                   id="signup-name"
+                  name="name"
                   type="text"
+                  autoComplete="name"
                   placeholder="Masukkan nama lengkap Anda"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-sm"
+                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-base md:text-sm"
                   required
                 />
               </div>
 
               {/* Password Field */}
               <div>
-                <label className="block text-sm font-medium text-white mb-1.5">
+                <label htmlFor="signup-password" className="block text-sm font-medium text-white mb-1.5">
                   Buat Password
                 </label>
                 <Input
                   id="signup-password"
+                  name="password"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Minimal 6 karakter"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-sm"
+                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-base md:text-sm"
                   required
                 />
               </div>
 
               {/* Password Confirmation Field */}
               <div>
-                <label className="block text-sm font-medium text-white mb-1.5">
+                <label htmlFor="signup-password-confirmation" className="block text-sm font-medium text-white mb-1.5">
                   Konfirmasi Password
                 </label>
                 <Input
                   id="signup-password-confirmation"
+                  name="password_confirmation"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Ulangi password di atas"
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}
-                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-sm"
+                  className="h-11 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-base md:text-sm"
                   required
                 />
               </div>

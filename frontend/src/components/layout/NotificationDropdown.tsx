@@ -57,15 +57,24 @@ export default function NotificationDropdown() {
     return () => clearInterval(interval);
   }, []);
 
-  // Close dropdown on click outside
+  // Close dropdown on click/tap outside or Escape key
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handlePointerOutside = (e: PointerEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleMarkAsRead = async (notif: NotificationItem) => {
@@ -138,11 +147,13 @@ export default function NotificationDropdown() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       {/* Bell Button */}
       <Button
         variant="ghost"
         size="sm"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
         className="relative h-9 w-9 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
         onClick={() => setIsOpen(!isOpen)}
         title="Notifikasi"
@@ -157,8 +168,8 @@ export default function NotificationDropdown() {
 
       {/* Popover Card */}
       {isOpen && (
-        <div className="fixed inset-x-2 top-16 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-2 max-w-sm sm:w-96 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
-          <div className="p-3.5 border-b flex items-center justify-between bg-gray-50/70 dark:bg-gray-800/50">
+        <div className="fixed inset-x-3 top-[4.25rem] sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 max-w-md sm:w-96 rounded-xl bg-white dark:bg-[#021829] border border-gray-200 dark:border-[#ffeacd]/20 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
+          <div className="p-3.5 border-b border-gray-100 dark:border-[#ffeacd]/10 flex items-center justify-between bg-gray-50 dark:bg-[#011321]">
             <div className="flex items-center gap-2">
               <span className="font-bold text-sm">Notifikasi</span>
               {unreadCount > 0 && (

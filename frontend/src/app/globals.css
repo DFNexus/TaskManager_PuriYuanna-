@@ -115,10 +115,29 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+    overflow-x: clip;
   }
 
   html {
     @apply font-sans;
     font-family: var(--font-sans);
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Prevent involuntary mobile browser auto-zoom on form controls (< 16px triggers zoom on iOS/Android) */
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea,
+    select,
+    [data-slot="select-trigger"] {
+      font-size: 1rem !important;
+    }
+  }
+
+  [data-slot="dialog-content"],
+  [data-slot="dialog-overlay"] {
+    overscroll-behavior: contain;
   }
 }

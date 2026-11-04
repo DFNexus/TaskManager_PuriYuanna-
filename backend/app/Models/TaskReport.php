@@ -22,6 +22,8 @@ class TaskReport extends Model
 
     public function approvalLogs()
     {
-        return $this->hasMany(ApprovalLog::class, 'report_id');
+        return $this->hasMany(ApprovalLog::class, 'report_id')
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc');
     }
 }

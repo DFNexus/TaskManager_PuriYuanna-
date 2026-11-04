@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
+import { summarizeTaskReports, ReportWithLogs } from '@/lib/approvalUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +17,9 @@ import {
   AlertCircle, 
   ArrowRight,
   Plus,
-  ListTodo
+  ListTodo,
+  ClipboardCheck,
+  RotateCcw
 } from 'lucide-react';
 
 interface Task {
@@ -27,6 +30,7 @@ interface Task {
   deadline: string;
   status: 'pending' | 'in_progress' | 'waiting_approval' | 'done' | 'rejected';
   assigned_to: { id: number; name: string };
+  reports?: ReportWithLogs[];
 }
 
 export default function DashboardPage() {
@@ -73,10 +77,37 @@ export default function DashboardPage() {
     }
   };
 
+  const renderTaskStatusBadge = (task: Task) => {
+    const summary = summarizeTaskReports(task.reports, task.status);
+    if (task.status === 'done' && summary.isRevisedApproval) {
+      return (
+        <div className="flex items-center gap-1">
+          <Badge className="bg-teal-100 text-teal-900 border border-teal-400/60 dark:bg-teal-900/50 dark:text-teal-200 dark:border-teal-700">
+            Revisi Disetujui
+          </Badge>
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+            <RotateCcw className="h-2.5 w-2.5" /> {summary.revisionCount}x
+          </span>
+        </div>
+      );
+    }
+    if (task.status === 'waiting_approval' && summary.isPendingAfterRevision) {
+      return (
+        <div className="flex items-center gap-1">
+          <Badge variant="purple">Menunggu Review</Badge>
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200">
+            Hasil Revisi ({summary.revisionCount}x)
+          </span>
+        </div>
+      );
+    }
+    return getStatusBadge(task.status);
+  };
+
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="bg-white dark:bg-[#011321] text-[#011321] dark:text-white p-4 sm:p-6 rounded-xl shadow-xs border border-teal-100 dark:border-[#ffeacd]/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden transition-colors">
+      <div className="bg-white dark:bg-[#011321] text-[#011321] dark:text-white p-4 sm:p-6 rounded-xl shadow-xs border border-teal-100 dark:border-[#ffeacd]/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative isolate overflow-hidden transition-colors">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-[#22bcb4]/10 rounded-full blur-2xl pointer-events-none" />
         <div className="relative z-10 w-full sm:w-auto">
           <div className="inline-flex items-center gap-2 mb-2">
@@ -94,7 +125,7 @@ export default function DashboardPage() {
             Sistem manajemen task & checklist terpadu Puri Yuanna Living. Pantau dan kelola seluruh alur operasional properti secara real-time.
           </p>
         </div>
-        {(user?.role === 'Manager' || user?.role === 'Admin') && (
+        {(user?.role === 'Manager' || user?.role === 'Admin' || user?.role === 'SPV') && (
           <Link href="/dashboard/tasks?action=create" className="relative z-10 w-full sm:w-auto shrink-0">
             <Button className="w-full sm:w-auto bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center justify-center">
               <Plus className="mr-2 h-4 w-4" /> Buat Task Baru
@@ -177,6 +208,49 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <ArrowRight className="h-5 w-5 text-[#22bcb4] group-hover:translate-x-1 transition-transform" />
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      )}
+
+      {/* Quick Navigation Cards for SPV */}
+      {user?.role === 'SPV' && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Link href="/dashboard/approvals" className="block group">
+            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-[#011728] text-amber-700 dark:text-[#ffeacd]">
+                    <ClipboardCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-[#011321] dark:text-white group-hover:text-[#22bcb4] transition-colors">
+                      Approval Laporan
+                    </h3>
+                    <p className="text-xs text-muted-foreground">Inspeksi checklist, foto bukti, dan setujui tugas staf</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-[#22bcb4] group-hover:translate-x-1 transition-transform" />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/dashboard/tasks" className="block group">
+            <Card className="h-full hover:border-[#22bcb4] transition-all hover:shadow-md cursor-pointer border border-gray-200 dark:border-white/10 dark:bg-[#000a14]">
+              <CardContent className="p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-[#011728] text-[#006e69] dark:text-[#22bcb4]">
+                    <CheckSquare className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-[#011321] dark:text-white group-hover:text-[#22bcb4] transition-colors">
+                      Manajemen Task
+                    </h3>
+                    <p className="text-xs text-muted-foreground">Buat tugas baru, atur deskripsi item, dan pantau progres</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-[#22bcb4] group-hover:translate-x-1 transition-transform" />
               </CardContent>
             </Card>
           </Link>
@@ -274,30 +348,36 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {recentTasks.map((task) => (
-                <Link
-                  key={task.id}
-                  href={user?.role === 'Staff' ? `/dashboard/my-tasks/${task.id}` : `/dashboard/tasks`}
-                  className="block hover:bg-[#22bcb4]/5 dark:hover:bg-gray-800/50 -mx-2 sm:-mx-4 px-2 sm:px-4 rounded-md transition-colors"
-                >
-                  <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate hover:text-[#006e69] dark:hover:text-[#22bcb4] transition-colors">
-                        {task.judul}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        Kategori: <span className="text-[#011321] dark:text-slate-300 font-medium">{task.kategori}</span> · Ditugaskan: <span className="font-semibold text-gray-800 dark:text-gray-200">{task.assigned_to?.name || '-'}</span>
-                      </p>
+              {recentTasks.map((task) => {
+                const summary = summarizeTaskReports(task.reports, task.status);
+                return (
+                  <Link
+                    key={task.id}
+                    href={user?.role === 'Staff' ? `/dashboard/my-tasks/${task.id}` : `/dashboard/tasks`}
+                    className="block hover:bg-[#22bcb4]/5 dark:hover:bg-gray-800/50 -mx-2 sm:-mx-4 px-2 sm:px-4 rounded-md transition-colors"
+                  >
+                    <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate hover:text-[#006e69] dark:hover:text-[#22bcb4] transition-colors">
+                          {task.judul}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                          Kategori: <span className="text-[#011321] dark:text-slate-300 font-medium">{task.kategori}</span> · Ditugaskan: <span className="font-semibold text-gray-800 dark:text-gray-200">{task.assigned_to?.name || '-'}</span>
+                          {summary.latestApproveLog?.user?.name && (
+                            <> · Approval: <span className="font-semibold text-emerald-700 dark:text-emerald-400">{summary.latestApproveLog.user.name} ({summary.latestApproveLog.user.role})</span></>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-1 sm:pt-0">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                        </span>
+                        {renderTaskStatusBadge(task)}
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-1 sm:pt-0">
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                      </span>
-                      {getStatusBadge(task.status)}
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </CardContent>

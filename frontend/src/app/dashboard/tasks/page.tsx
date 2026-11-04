@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import api, { getStorageUrl } from '@/lib/api';
+import { summarizeTaskReports, ReportWithLogs } from '@/lib/approvalUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,13 +29,16 @@ import {
   Image as ImageIcon,
   FileText,
   Building2,
-  ExternalLink
+  ExternalLink,
+  History,
+  RotateCcw
 } from 'lucide-react';
 
 interface ChecklistItem {
   id?: number;
   task_id?: number;
   label: string;
+  deskripsi?: string | null;
   tipe: 'required' | 'optional';
   is_checked?: boolean;
   urutan?: number;
@@ -71,6 +75,7 @@ interface Task {
   status: 'pending' | 'in_progress' | 'waiting_approval' | 'done' | 'rejected';
   is_recurring: boolean;
   checklist_items: ChecklistItem[];
+  reports?: ReportWithLogs[];
   created_at: string;
 }
 
@@ -102,9 +107,9 @@ export default function TasksPage() {
   const [deadline, setDeadline] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [unitId, setUnitId] = useState('');
-  const [checklistItems, setChecklistItems] = useState<{ id?: number; label: string; tipe: 'required' | 'optional'; is_checked?: boolean }[]>([
-    { label: '', tipe: 'required' }
-  ]);
+  const [checklistItems, setChecklistItems] = useState<
+    { id?: number; label: string; deskripsi?: string; tipe: 'required' | 'optional'; is_checked?: boolean }[]
+  >([{ label: '', deskripsi: '', tipe: 'required' }]);
 
   // Quick reassign state
   const [newAssignee, setNewAssignee] = useState('');
@@ -221,7 +226,7 @@ export default function TasksPage() {
     setDeadline('');
     setAssignedTo('');
     setUnitId('');
-    setChecklistItems([{ label: '', tipe: 'required' }]);
+    setChecklistItems([{ label: '', deskripsi: '', tipe: 'required' }]);
     setEditingId(null);
   };
 
@@ -249,10 +254,11 @@ export default function TasksPage() {
         ? task.checklist_items.map((i) => ({
             id: i.id,
             label: i.label,
+            deskripsi: i.deskripsi || '',
             tipe: i.tipe,
             is_checked: i.is_checked,
           }))
-        : [{ label: '', tipe: 'required' }]
+        : [{ label: '', deskripsi: '', tipe: 'required' }]
     );
     setIsCreateOpen(true);
   };
@@ -308,7 +314,7 @@ export default function TasksPage() {
 
   // Checklist builder helpers
   const addChecklistItem = () => {
-    setChecklistItems([...checklistItems, { label: '', tipe: 'required' }]);
+    setChecklistItems([...checklistItems, { label: '', deskripsi: '', tipe: 'required' }]);
   };
 
   const removeChecklistItem = (index: number) => {
@@ -316,10 +322,12 @@ export default function TasksPage() {
     setChecklistItems(checklistItems.filter((_, i) => i !== index));
   };
 
-  const updateChecklistItem = (index: number, field: 'label' | 'tipe', value: string) => {
+  const updateChecklistItem = (index: number, field: 'label' | 'deskripsi' | 'tipe', value: string) => {
     const updated = [...checklistItems];
     if (field === 'label') {
       updated[index].label = value;
+    } else if (field === 'deskripsi') {
+      updated[index].deskripsi = value;
     } else if (field === 'tipe') {
       updated[index].tipe = value as 'required' | 'optional';
     }
@@ -338,6 +346,7 @@ export default function TasksPage() {
       .map((item, index) => ({
         ...(item.id ? { id: item.id } : {}),
         label: item.label.trim(),
+        deskripsi: item.deskripsi?.trim() ? item.deskripsi.trim() : null,
         tipe: item.tipe,
         urutan: index,
         ...(typeof item.is_checked === 'boolean' ? { is_checked: item.is_checked } : {}),
@@ -443,10 +452,90 @@ export default function TasksPage() {
       case 'done':
         return <Badge variant="success">Selesai</Badge>;
       case 'rejected':
-        return <Badge variant="destructive">Ditolak</Badge>;
+        return <Badge variant="destructive">Perlu Revisi</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const renderTaskStatusBadges = (task: Task) => {
+    const summary = summarizeTaskReports(task.reports, task.status);
+
+    if (task.status === 'done') {
+      if (summary.isRevisedApproval) {
+        return (
+          <div className="flex flex-wrap items-center justify-end gap-1">
+            <Badge className="bg-teal-100 text-teal-900 border border-teal-400/60 dark:bg-teal-900/50 dark:text-teal-200 dark:border-teal-700">
+              Revisi Disetujui
+            </Badge>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+              <RotateCcw className="h-2.5 w-2.5" /> {summary.revisionCount}x Revisi
+            </span>
+          </div>
+        );
+      }
+      if (summary.isDirectApproval) {
+        return (
+          <div className="flex flex-wrap items-center justify-end gap-1">
+            <Badge variant="success">Selesai</Badge>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+              Langsung Approve
+            </span>
+          </div>
+        );
+      }
+    }
+
+    if (task.status === 'waiting_approval' && summary.isPendingAfterRevision) {
+      return (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Badge variant="purple">Menunggu Review</Badge>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-900/40 dark:text-purple-200 dark:border-purple-700">
+            <RotateCcw className="h-2.5 w-2.5" /> Hasil Revisi ({summary.revisionCount}x)
+          </span>
+        </div>
+      );
+    }
+
+    if (task.status === 'rejected' && summary.revisionCount > 0) {
+      return (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Badge variant="destructive">Perlu Revisi</Badge>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+            Revisi ke-{summary.revisionCount}
+          </span>
+        </div>
+      );
+    }
+
+    return getStatusBadge(task.status);
+  };
+
+  const renderTaskApprovalLog = (task: Task, compact = false) => {
+    const summary = summarizeTaskReports(task.reports, task.status);
+    if (summary.logs.length === 0) return null;
+
+    return (
+      <div className={`text-[11px] space-y-1 ${compact ? 'mt-1' : 'p-2.5 rounded-lg bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70'}`}>
+        {summary.latestApproveLog && (
+          <div className="flex items-start gap-1.5 text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <span>
+              Approval: <b>{summary.latestApproveLog.user?.name || '-'}</b> ({summary.latestApproveLog.user?.role || '-'})
+            </span>
+          </div>
+        )}
+        {summary.revisionCount > 0 && (
+          <div className="flex items-start gap-1.5 text-amber-800 dark:text-amber-300">
+            <RotateCcw className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <span>
+              Revisi <b>{summary.revisionCount}x</b>
+              {summary.rejecterSummary ? ` oleh ${summary.rejecterSummary}` : ''}
+            </span>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -623,7 +712,7 @@ export default function TasksPage() {
                     </span>
                     {getPriorityBadge(task.prioritas)}
                   </div>
-                  {getStatusBadge(task.status)}
+                  <div className="shrink-0">{renderTaskStatusBadges(task)}</div>
                 </div>
 
                 {/* Title & description */}
@@ -673,6 +762,9 @@ export default function TasksPage() {
                     />
                   </div>
                 </div>
+
+                {/* Approval & Revision Log inside card */}
+                {renderTaskApprovalLog(task)}
 
                 {/* Mobile Action Buttons Bar */}
                 <div className="flex items-center justify-between gap-1 pt-2 border-t border-gray-100 dark:border-gray-800">
@@ -812,7 +904,12 @@ export default function TasksPage() {
                         {completedChecklist}/{totalChecklist} Item
                       </span>
                     </TableCell>
-                    <TableCell>{getStatusBadge(task.status)}</TableCell>
+                    <TableCell className="min-w-[200px]">
+                      <div className="flex flex-col items-start gap-1">
+                        {renderTaskStatusBadges(task)}
+                        {renderTaskApprovalLog(task, true)}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end items-center gap-1">
                         <Button
@@ -869,7 +966,7 @@ export default function TasksPage() {
           if (!open) resetForm();
         }}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[650px]">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[650px]">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Task' : 'Buat Task Baru'}</DialogTitle>
             <DialogDescription>
@@ -993,7 +1090,7 @@ export default function TasksPage() {
               <Label>Deskripsi / Catatan Tambahan (Opsional)</Label>
               <textarea
                 rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="Berikan instruksi spesifik untuk staff..."
                 value={deskripsi}
                 onChange={(e) => setDeskripsi(e.target.value)}
@@ -1006,7 +1103,7 @@ export default function TasksPage() {
                 <div>
                   <h4 className="text-sm font-semibold">Checklist Pengerjaan</h4>
                   <p className="text-xs text-muted-foreground">
-                    Susun item checklist yang harus diselesaikan staff.
+                    Susun item checklist beserta deskripsi detail per item untuk dikerjakan staff.
                   </p>
                 </div>
                 <Button
@@ -1020,41 +1117,56 @@ export default function TasksPage() {
                 </Button>
               </div>
 
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                 {checklistItems.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground w-5 text-center">
-                      {index + 1}.
-                    </span>
-                    <Input
-                      placeholder={`Instruksi item #${index + 1}`}
-                      value={item.label}
-                      onChange={(e) => updateChecklistItem(index, 'label', e.target.value)}
-                      className="flex-1 text-sm h-9"
-                    />
-                    <Select
-                      value={item.tipe}
-                      onValueChange={(val) => val && updateChecklistItem(index, 'tipe', val)}
-                    >
-                      <SelectTrigger className="w-[105px] h-9 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="required">Wajib</SelectItem>
-                        <SelectItem value="optional">Opsional</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {checklistItems.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeChecklistItem(index)}
-                        className="h-9 w-9 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                  <div
+                    key={index}
+                    className="p-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 space-y-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-muted-foreground w-5 text-center shrink-0">
+                        {index + 1}.
+                      </span>
+                      <Input
+                        placeholder={`Judul item tugas #${index + 1}`}
+                        value={item.label}
+                        onChange={(e) => updateChecklistItem(index, 'label', e.target.value)}
+                        className="flex-1 h-9 bg-white dark:bg-gray-900"
+                      />
+                      <Select
+                        value={item.tipe}
+                        onValueChange={(val) => val && updateChecklistItem(index, 'tipe', val)}
                       >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                        <SelectTrigger className="w-[105px] h-9 shrink-0 bg-white dark:bg-gray-900">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="required">Wajib</SelectItem>
+                          <SelectItem value="optional">Opsional</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {checklistItems.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeChecklistItem(index)}
+                          className="h-9 w-9 p-0 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                          title="Hapus Item"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="pl-7">
+                      <textarea
+                        rows={2}
+                        placeholder={`Deskripsi tugas item #${index + 1} (opsional, contoh: ganti sprei putih & rapikan bantal)...`}
+                        value={item.deskripsi || ''}
+                        onChange={(e) => updateChecklistItem(index, 'deskripsi', e.target.value)}
+                        className="flex w-full rounded-md border border-input bg-white dark:bg-gray-900 px-3 py-1.5 text-base md:text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1069,10 +1181,10 @@ export default function TasksPage() {
 
       {/* Modal: Detail Task */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[550px]">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[550px]">
           <DialogHeader>
-            <div className="flex items-center gap-2 mb-1">
-              {selectedTask && getStatusBadge(selectedTask.status)}
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              {selectedTask && renderTaskStatusBadges(selectedTask)}
               {selectedTask && getPriorityBadge(selectedTask.prioritas)}
             </div>
             <DialogTitle className="text-xl font-bold">{selectedTask?.judul}</DialogTitle>
@@ -1171,10 +1283,15 @@ export default function TasksPage() {
                               >
                                 {item.label}
                               </span>
+                              {item.deskripsi && (
+                                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 whitespace-pre-line">
+                                  {item.deskripsi}
+                                </p>
+                              )}
                               {item.catatan && (
                                 <div className="mt-1.5 p-2 bg-slate-50 dark:bg-gray-800/60 rounded text-xs text-muted-foreground border flex items-start gap-1.5">
                                   <FileText className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
-                                  <span>{item.catatan}</span>
+                                  <span>Catatan Staf: {item.catatan}</span>
                                 </div>
                               )}
                             </div>
@@ -1264,6 +1381,58 @@ export default function TasksPage() {
                   )}
                 </div>
               </div>
+
+              {/* Riwayat Approval & Revisi */}
+              {(() => {
+                const detailSummary = summarizeTaskReports(selectedTask.reports, selectedTask.status);
+                if (detailSummary.logs.length === 0) return null;
+                let rejectIdx = 0;
+                return (
+                  <div className="border-t pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                        <History className="h-4 w-4 text-muted-foreground" /> Riwayat Approval & Revisi
+                      </h4>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                        {detailSummary.revisionCount > 0 ? `${detailSummary.revisionCount}x Revisi` : 'Langsung Approve'}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {detailSummary.logs.map((log) => {
+                        if (log.action === 'reject') rejectIdx += 1;
+                        return (
+                          <div
+                            key={log.id}
+                            className={`p-2.5 rounded-md border text-xs ${
+                              log.action === 'approve'
+                                ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20'
+                                : 'bg-red-50/50 border-red-200 dark:bg-red-950/20'
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-1 font-semibold">
+                              <span className={log.action === 'approve' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}>
+                                {log.action === 'approve'
+                                  ? detailSummary.revisionCount > 0
+                                    ? 'Revisi Disetujui'
+                                    : 'Disetujui'
+                                  : `Revisi #${rejectIdx}`}{' '}
+                                oleh {log.user?.name || '-'} ({log.user?.role || '-'})
+                              </span>
+                              <span className="text-muted-foreground font-normal">
+                                {new Date(log.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}{' '}
+                                {new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            {log.catatan && (
+                              <p className="mt-1 text-gray-700 dark:text-gray-300">Catatan: {log.catatan}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </DialogContent>

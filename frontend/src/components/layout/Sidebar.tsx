@@ -43,7 +43,7 @@ export default function Sidebar() {
   ];
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white dark:bg-[#011321] text-gray-800 dark:text-white border-r border-gray-200 dark:border-[#ffeacd]/10 shadow-lg transition-colors duration-200">
+    <div className="flex flex-col h-full min-h-0 bg-white dark:bg-[#011321] text-gray-800 dark:text-white border-r border-gray-200 dark:border-[#ffeacd]/10 shadow-lg transition-colors duration-200">
       <div className="p-5 sm:p-6 border-b border-gray-200 dark:border-[#ffeacd]/10 flex items-center justify-between">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#22bcb4]">
@@ -65,7 +65,7 @@ export default function Sidebar() {
         </Button>
       </div>
 
-      <div className="flex-1 py-4 overflow-y-auto">
+      <div className="flex-1 min-h-0 py-4 overflow-y-auto">
         <nav className="space-y-1.5 px-3">
           {navItems.map((item) => {
             const isActive = pathname === item.href;

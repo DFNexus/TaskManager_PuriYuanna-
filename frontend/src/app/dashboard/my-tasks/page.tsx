@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { summarizeTaskReports, ReportWithLogs } from '@/lib/approvalUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,12 +18,14 @@ import {
   ListTodo,
   AlertTriangle,
   Play,
-  Building2
+  Building2,
+  RotateCcw
 } from 'lucide-react';
 
 interface ChecklistItem {
   id: number;
   label: string;
+  deskripsi?: string | null;
   tipe: 'required' | 'optional';
   is_checked: boolean;
 }
@@ -44,6 +47,7 @@ interface Task {
   created_by: { id: number; name: string };
   checklist_items: ChecklistItem[];
   unit?: Unit | null;
+  reports?: ReportWithLogs[];
 }
 
 export default function MyTasksPage() {
@@ -80,10 +84,63 @@ export default function MyTasksPage() {
       case 'done':
         return <Badge variant="success">Selesai</Badge>;
       case 'rejected':
-        return <Badge variant="destructive">Ditolak / Revisi</Badge>;
+        return <Badge variant="destructive">Perlu Revisi</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  const renderTaskStatusBadges = (task: Task) => {
+    const summary = summarizeTaskReports(task.reports, task.status);
+
+    if (task.status === 'done') {
+      if (summary.isRevisedApproval) {
+        return (
+          <div className="flex flex-wrap items-center justify-end gap-1">
+            <Badge className="bg-teal-100 text-teal-900 border border-teal-400/60 dark:bg-teal-900/50 dark:text-teal-200 dark:border-teal-700">
+              Revisi Disetujui
+            </Badge>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+              <RotateCcw className="h-2.5 w-2.5" /> {summary.revisionCount}x Revisi
+            </span>
+          </div>
+        );
+      }
+      if (summary.isDirectApproval) {
+        return (
+          <div className="flex flex-wrap items-center justify-end gap-1">
+            <Badge variant="success">Selesai</Badge>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+              Langsung Approve
+            </span>
+          </div>
+        );
+      }
+    }
+
+    if (task.status === 'waiting_approval' && summary.isPendingAfterRevision) {
+      return (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Badge variant="purple">Menunggu Review</Badge>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-900/40 dark:text-purple-200 dark:border-purple-700">
+            <RotateCcw className="h-2.5 w-2.5" /> Hasil Revisi ({summary.revisionCount}x)
+          </span>
+        </div>
+      );
+    }
+
+    if (task.status === 'rejected' && summary.revisionCount > 0) {
+      return (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Badge variant="destructive">Perlu Revisi</Badge>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+            Revisi ke-{summary.revisionCount}
+          </span>
+        </div>
+      );
+    }
+
+    return getStatusBadge(task.status);
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -241,6 +298,7 @@ export default function MyTasksPage() {
             const completedItems = task.checklist_items?.filter((i) => i.is_checked).length || 0;
             const percentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
             const isOverdue = new Date(task.deadline) < new Date() && task.status !== 'done';
+            const summary = summarizeTaskReports(task.reports, task.status);
 
             return (
               <Card
@@ -255,7 +313,7 @@ export default function MyTasksPage() {
                       </span>
                       {getPriorityBadge(task.prioritas)}
                     </div>
-                    {getStatusBadge(task.status)}
+                    <div className="shrink-0">{renderTaskStatusBadges(task)}</div>
                   </div>
                   <CardTitle className="text-lg font-bold mt-2 text-gray-900 dark:text-gray-100">
                     {task.judul}
@@ -313,6 +371,34 @@ export default function MyTasksPage() {
                       />
                     </div>
                   </div>
+
+                  {/* Approval & Revision Log inside card */}
+                  {summary.logs.length > 0 && (
+                    <div className="p-2.5 rounded-lg bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70 text-[11px] space-y-1">
+                      {summary.latestApproveLog && (
+                        <div className="flex items-start gap-1.5 text-emerald-700 dark:text-emerald-300">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          <span>
+                            Disetujui oleh <b>{summary.latestApproveLog.user?.name || '-'}</b> ({summary.latestApproveLog.user?.role || '-'})
+                          </span>
+                        </div>
+                      )}
+                      {summary.revisionCount > 0 && (
+                        <div className="flex items-start gap-1.5 text-amber-800 dark:text-amber-300">
+                          <RotateCcw className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          <span>
+                            Revisi <b>{summary.revisionCount}x</b>
+                            {summary.rejecterSummary ? ` dari ${summary.rejecterSummary}` : ''}
+                          </span>
+                        </div>
+                      )}
+                      {task.status === 'rejected' && summary.latestRejectLog?.catatan && (
+                        <p className="text-red-700 dark:text-red-300 italic line-clamp-2 pl-5">
+                          &ldquo;{summary.latestRejectLog.catatan}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Action button */}
                   <Link href={`/dashboard/my-tasks/${task.id}`} className="block">

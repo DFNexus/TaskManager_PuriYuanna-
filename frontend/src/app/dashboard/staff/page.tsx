@@ -193,7 +193,16 @@ export default function StaffPage() {
             <form onSubmit={handleSubmit} className="space-y-4 pt-2">
               <div className="space-y-2">
                 <Label>Email <span className="text-red-500">*</span></Label>
-                <Input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@puriyuanna.com" />
+                <Input
+                  required
+                  type="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="email@puriyuanna.com"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Nama Lengkap {editingId ? '' : '(Opsional)'}</Label>

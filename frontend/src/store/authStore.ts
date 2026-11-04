@@ -28,14 +28,14 @@ export const useAuthStore = create<AuthState>()(
       token: Cookies.get('token') || null,
       isAuthenticated: !!Cookies.get('token'),
       setAuth: (user, token) => {
-        Cookies.set('token', token, { expires: 1 }); // 1 day
+        Cookies.set('token', token, { expires: 1, path: '/', sameSite: 'lax' }); // 1 day
         set({ user, token, isAuthenticated: true });
       },
       setUser: (user) => {
         set({ user });
       },
       logout: () => {
-        Cookies.remove('token');
+        Cookies.remove('token', { path: '/' });
         set({ user: null, token: null, isAuthenticated: false });
       },
     }),

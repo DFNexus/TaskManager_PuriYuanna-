@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import api, { getStorageUrl } from '@/lib/api';
+import { summarizeApprovalLogs } from '@/lib/approvalUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ import {
 interface ChecklistItem {
   id: number;
   label: string;
+  deskripsi?: string | null;
   tipe: 'required' | 'optional';
   is_checked: boolean;
   catatan: string | null;
@@ -175,17 +177,110 @@ export default function ApprovalsPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="warning">Menunggu Review</Badge>;
-      case 'approved':
-        return <Badge variant="success">Disetujui</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Perlu Revisi</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const renderStatusBadges = (report: TaskReport) => {
+    const summary = summarizeApprovalLogs(report.approval_logs, report.status);
+
+    if (report.status === 'approved') {
+      if (summary.isRevisedApproval) {
+        return (
+          <div className="flex flex-wrap items-center justify-end gap-1">
+            <Badge className="bg-teal-100 text-teal-900 border border-teal-400/60 dark:bg-teal-900/50 dark:text-teal-200 dark:border-teal-700">
+              Revisi Disetujui
+            </Badge>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+              <RotateCcw className="h-2.5 w-2.5" /> {summary.revisionCount}x Revisi
+            </span>
+          </div>
+        );
+      }
+      return (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Badge variant="success">Disetujui</Badge>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+            Langsung Approve
+          </span>
+        </div>
+      );
     }
+
+    if (report.status === 'pending') {
+      return (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Badge variant="warning">Menunggu Review</Badge>
+          {summary.isPendingAfterRevision && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-900/40 dark:text-purple-200 dark:border-purple-700">
+              <RotateCcw className="h-2.5 w-2.5" /> Hasil Revisi ({summary.revisionCount}x)
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    if (report.status === 'rejected') {
+      return (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          <Badge variant="destructive">Perlu Revisi</Badge>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+            Revisi ke-{summary.revisionCount || 1}
+          </span>
+        </div>
+      );
+    }
+
+    return <Badge variant="outline">{report.status}</Badge>;
+  };
+
+  const renderApprovalLogSummary = (report: TaskReport, compact = false) => {
+    const summary = summarizeApprovalLogs(report.approval_logs, report.status);
+
+    if (summary.logs.length === 0) {
+      return (
+        <div className={`text-[11px] text-muted-foreground flex items-center gap-1.5 ${compact ? '' : 'px-2.5 py-2 rounded-lg bg-gray-50/70 dark:bg-gray-800/40 border border-dashed border-gray-200 dark:border-gray-800'}`}>
+          <History className="h-3 w-3 shrink-0 opacity-60" />
+          <span>Pengiriman pertama (belum ada riwayat revisi)</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`text-xs space-y-1 ${compact ? 'mt-1' : 'p-2.5 rounded-lg bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70'}`}>
+        <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+          <span className="flex items-center gap-1">
+            <History className="h-3 w-3 text-[#22bcb4] shrink-0" />
+            Log Approval
+          </span>
+          <span>
+            {summary.revisionCount > 0 ? `${summary.revisionCount}x Revisi` : 'Tanpa Revisi'}
+          </span>
+        </div>
+
+        {summary.latestApproveLog && (
+          <div className="flex items-start gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <span>
+              Disetujui oleh <b>{summary.latestApproveLog.user?.name || '-'}</b> ({summary.latestApproveLog.user?.role || '-'})
+              {' · '}
+              {new Date(summary.latestApproveLog.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+            </span>
+          </div>
+        )}
+
+        {summary.revisionCount > 0 && summary.rejecterSummary && (
+          <div className="flex items-start gap-1.5 text-[11px] text-amber-800 dark:text-amber-300">
+            <RotateCcw className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <span>
+              Revisi ({summary.revisionCount}x) dari: <b>{summary.rejecterSummary}</b>
+            </span>
+          </div>
+        )}
+
+        {report.status === 'rejected' && summary.latestRejectLog?.catatan && (
+          <p className="text-[11px] text-red-700 dark:text-red-300 italic line-clamp-2 pl-5">
+            &ldquo;{summary.latestRejectLog.catatan}&rdquo;
+          </p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -328,7 +423,7 @@ export default function ApprovalsPage() {
                       <span>{report.task?.kategori}</span>
                     </div>
                   </div>
-                  {getStatusBadge(report.status)}
+                  <div className="shrink-0">{renderStatusBadges(report)}</div>
                 </div>
 
                 {/* Submitter & Time Info */}
@@ -348,6 +443,9 @@ export default function ApprovalsPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Log Approval & Revisi */}
+                {renderApprovalLogSummary(report)}
 
                 {/* Checklist & Photos Count Bar */}
                 <div className="flex items-center justify-between text-xs pt-1">
@@ -385,7 +483,7 @@ export default function ApprovalsPage() {
               <TableHead className="font-semibold">Staf Pengirim</TableHead>
               <TableHead className="font-semibold">Waktu Submit</TableHead>
               <TableHead className="font-semibold">Checklist & Bukti</TableHead>
-              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold">Status & Log Approval</TableHead>
               <TableHead className="text-right font-semibold">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -455,7 +553,12 @@ export default function ApprovalsPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(report.status)}</TableCell>
+                    <TableCell className="min-w-[240px]">
+                      <div className="flex flex-col items-start gap-1.5">
+                        {renderStatusBadges(report)}
+                        {renderApprovalLogSummary(report, true)}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button
                         size="sm"
@@ -475,10 +578,10 @@ export default function ApprovalsPage() {
 
       {/* Modal: Review & Approval Details */}
       <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
-            <div className="flex items-center gap-2 mb-1">
-              {selectedReport && getStatusBadge(selectedReport.status)}
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              {selectedReport && renderStatusBadges(selectedReport)}
               <span className="text-xs text-muted-foreground">
                 Kategori: <b>{selectedReport?.task?.kategori}</b>
               </span>
@@ -545,15 +648,20 @@ export default function ApprovalsPage() {
                           <Check className="h-3 w-3 stroke-[3]" />
                         </span>
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-semibold">{idx + 1}. {item.label}</span>
                             <Badge variant={item.tipe === 'required' ? 'secondary' : 'outline'} className="text-[10px]">
                               {item.tipe === 'required' ? 'Wajib' : 'Opsional'}
                             </Badge>
                           </div>
+                          {item.deskripsi && (
+                            <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 whitespace-pre-line">
+                              {item.deskripsi}
+                            </p>
+                          )}
                           {item.catatan && (
-                            <p className="text-xs text-muted-foreground mt-1 bg-white dark:bg-gray-900 p-1.5 rounded border inline-block">
-                              Catatan: {item.catatan}
+                            <p className="text-xs text-muted-foreground mt-1.5 bg-white dark:bg-gray-900 p-1.5 rounded border inline-block">
+                              Catatan Staf: {item.catatan}
                             </p>
                           )}
                         </div>
@@ -602,35 +710,53 @@ export default function ApprovalsPage() {
               </div>
 
               {/* Riwayat Approval Log */}
-              {selectedReport.approval_logs && selectedReport.approval_logs.length > 0 && (
-                <div className="border-t pt-3">
-                  <h4 className="text-sm font-bold mb-2 flex items-center gap-1.5">
-                    <History className="h-4 w-4 text-muted-foreground" /> Riwayat Peninjauan:
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedReport.approval_logs.map((log) => (
-                      <div
-                        key={log.id}
-                        className={`p-2.5 rounded-md border text-xs ${log.action === 'approve'
-                            ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20'
-                            : 'bg-red-50/50 border-red-200 dark:bg-red-950/20'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between font-semibold mb-1">
-                          <span className={log.action === 'approve' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}>
-                            {log.action === 'approve' ? 'Disetujui' : 'Ditolak / Minta Revisi'} oleh {log.user?.name} ({log.user?.role})
-                          </span>
-                          <span className="text-muted-foreground font-normal">
-                            {new Date(log.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}{' '}
-                            {new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        {log.catatan && <p className="text-gray-700 dark:text-gray-300">Catatan: {log.catatan}</p>}
-                      </div>
-                    ))}
+              {selectedReport.approval_logs && selectedReport.approval_logs.length > 0 && (() => {
+                const modalSummary = summarizeApprovalLogs(selectedReport.approval_logs, selectedReport.status);
+                let rejectStep = 0;
+                return (
+                  <div className="border-t pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-bold flex items-center gap-1.5">
+                        <History className="h-4 w-4 text-muted-foreground" /> Riwayat Peninjauan & Approval:
+                      </h4>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                        {modalSummary.revisionCount > 0 ? `Total ${modalSummary.revisionCount}x Revisi` : 'Langsung Approve (0x Revisi)'}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {modalSummary.logs.map((log) => {
+                        if (log.action === 'reject') rejectStep += 1;
+                        const stepLabel =
+                          log.action === 'approve'
+                            ? modalSummary.revisionCount > 0
+                              ? 'Revisi Disetujui'
+                              : 'Disetujui (Langsung Approve)'
+                            : `Permintaan Revisi #${rejectStep}`;
+                        return (
+                          <div
+                            key={log.id}
+                            className={`p-2.5 rounded-md border text-xs ${log.action === 'approve'
+                                ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20'
+                                : 'bg-red-50/50 border-red-200 dark:bg-red-950/20'
+                              }`}
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-1 font-semibold mb-1">
+                              <span className={log.action === 'approve' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}>
+                                {stepLabel} oleh {log.user?.name || '-'} ({log.user?.role || '-'})
+                              </span>
+                              <span className="text-muted-foreground font-normal">
+                                {new Date(log.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}{' '}
+                                {new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            {log.catatan && <p className="text-gray-700 dark:text-gray-300">Catatan: {log.catatan}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Action Buttons for Pending Reports */}
               {selectedReport.status === 'pending' && (
@@ -676,7 +802,7 @@ export default function ApprovalsPage() {
               <label className="text-sm font-medium">Catatan Persetujuan (Opsional)</label>
               <textarea
                 rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="Contoh: Pekerjaan rapi dan sesuai standar."
                 value={catatanApprove}
                 onChange={(e) => setCatatanApprove(e.target.value)}
@@ -711,7 +837,7 @@ export default function ApprovalsPage() {
               <textarea
                 rows={3}
                 required
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="Contoh: Lantai kamar mandi masih basah dan sprei belum diganti baru."
                 value={catatanReject}
                 onChange={(e) => setCatatanReject(e.target.value)}

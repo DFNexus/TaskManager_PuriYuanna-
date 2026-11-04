@@ -70,32 +70,39 @@ export default function LoginPage() {
             <div className="space-y-4">
               {/* Email Field */}
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="login-email" className="block text-sm font-medium text-white mb-2">
                   Email address
                 </label>
                 <Input
                   id="login-email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-sm"
+                  className="h-12 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-base md:text-sm"
                   required
                 />
               </div>
 
               {/* Password Field */}
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="login-password" className="block text-sm font-medium text-white mb-2">
                   Password
                 </label>
                 <Input
                   id="login-password"
+                  name="password"
                   type="password"
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-sm"
+                  className="h-12 rounded-xl bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-500 focus-visible:ring-[#22bcb4]/50 focus-visible:border-[#22bcb4]/50 text-base md:text-sm"
                   required
                 />
               </div>

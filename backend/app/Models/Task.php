@@ -44,6 +44,8 @@ class Task extends Model
 
     public function reports()
     {
-        return $this->hasMany(TaskReport::class);
+        return $this->hasMany(TaskReport::class)
+            ->orderBy('submitted_at', 'desc')
+            ->orderBy('id', 'desc');
     }
 }

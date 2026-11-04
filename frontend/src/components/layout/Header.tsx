@@ -39,7 +39,7 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 border-b border-[#ffeacd]/30 dark:border-[#ffeacd]/10 bg-white dark:bg-[#011321] px-3 sm:px-6 lg:px-8 flex items-center justify-between shadow-xs z-10 shrink-0 transition-colors">
+    <header className="relative z-40 h-16 border-b border-[#ffeacd]/30 dark:border-[#ffeacd]/10 bg-white dark:bg-[#011321] px-3 sm:px-6 lg:px-8 flex items-center justify-between shadow-xs shrink-0 transition-colors">
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         {/* Mobile Hamburger Button */}
         <Button

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Models\ChecklistItem;
 use App\Models\TaskReport;
+use App\Models\ApprovalLog;
 use App\Models\User;
 use App\Notifications\TaskNotification;
 use Illuminate\Http\Request;
@@ -13,16 +14,20 @@ use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
+    private array $taskRelations = [
+        'assignedTo:id,name,role,email',
+        'createdBy:id,name',
+        'checklistItems',
+        'unit:id,nama,tipe,alamat',
+        'reports.approvalLogs.user:id,name,role',
+        'reports.submittedBy:id,name,role',
+    ];
+
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        $query = Task::with([
-            'assignedTo:id,name,role,email',
-            'createdBy:id,name',
-            'checklistItems',
-            'unit:id,nama,tipe,alamat'
-        ]);
+        $query = Task::with($this->taskRelations);
 
         // Staf can only see tasks assigned to them
         if ($user && strcasecmp($user->role, 'Staff') === 0) {
@@ -73,6 +78,7 @@ class TaskController extends Controller
             'is_recurring' => 'nullable|boolean',
             'checklist_items' => 'nullable|array',
             'checklist_items.*.label' => 'required|string|max:255',
+            'checklist_items.*.deskripsi' => 'nullable|string',
             'checklist_items.*.tipe' => 'required|in:required,optional',
             'checklist_items.*.urutan' => 'nullable|integer',
         ]);
@@ -98,6 +104,7 @@ class TaskController extends Controller
                     ChecklistItem::create([
                         'task_id' => $newTask->id,
                         'label' => $item['label'],
+                        'deskripsi' => $item['deskripsi'] ?? null,
                         'tipe' => $item['tipe'] ?? 'required',
                         'urutan' => $item['urutan'] ?? $index,
                         'is_checked' => false,
@@ -121,7 +128,7 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Task berhasil dibuat',
-            'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'unit:id,nama,tipe,alamat'])
+            'data' => $task->load($this->taskRelations)
         ], 201);
     }
 
@@ -132,14 +139,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'Unauthorized access to task'], 403);
         }
 
-        return response()->json($task->load([
-            'assignedTo:id,name,role,email',
-            'createdBy:id,name',
-            'checklistItems',
-            'unit:id,nama,tipe,alamat',
-            'reports.approvalLogs.user:id,name,role',
-            'reports.submittedBy:id,name',
-        ]));
+        return response()->json($task->load($this->taskRelations));
     }
 
     public function update(Request $request, Task $task)
@@ -156,13 +156,14 @@ class TaskController extends Controller
             'checklist_items' => 'nullable|array',
             'checklist_items.*.id' => 'nullable|integer',
             'checklist_items.*.label' => 'required|string|max:255',
+            'checklist_items.*.deskripsi' => 'nullable|string',
             'checklist_items.*.tipe' => 'required|in:required,optional',
             'checklist_items.*.urutan' => 'nullable|integer',
             'checklist_items.*.is_checked' => 'nullable|boolean',
         ]);
 
         DB::transaction(function () use ($validated, $task) {
-            $task->update($validated);
+            $task->update(collect($validated)->except('checklist_items')->toArray());
 
             if (isset($validated['checklist_items'])) {
                 $incomingItemIds = collect($validated['checklist_items'])
@@ -181,6 +182,7 @@ class TaskController extends Controller
                         if ($existing) {
                             $updateData = [
                                 'label' => $item['label'],
+                                'deskripsi' => $item['deskripsi'] ?? null,
                                 'tipe' => $item['tipe'] ?? 'required',
                                 'urutan' => $item['urutan'] ?? $index,
                             ];
@@ -195,6 +197,7 @@ class TaskController extends Controller
                     ChecklistItem::create([
                         'task_id' => $task->id,
                         'label' => $item['label'],
+                        'deskripsi' => $item['deskripsi'] ?? null,
                         'tipe' => $item['tipe'] ?? 'required',
                         'urutan' => $item['urutan'] ?? $index,
                         'is_checked' => $item['is_checked'] ?? false,
@@ -205,7 +208,7 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Task berhasil diupdate',
-            'data' => $task->fresh(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'unit:id,nama,tipe,alamat'])
+            'data' => $task->fresh($this->taskRelations)
         ]);
     }
 
@@ -236,7 +239,7 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Penugasan staff berhasil diperbarui',
-            'data' => $task->load(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'unit:id,nama,tipe,alamat'])
+            'data' => $task->load($this->taskRelations)
         ]);
     }
 
@@ -267,13 +270,44 @@ class TaskController extends Controller
         ]);
 
         $report = DB::transaction(function () use ($task, $user, $validated) {
-            $newReport = TaskReport::create([
-                'task_id' => $task->id,
-                'submitted_by' => $user->id,
-                'submitted_at' => now(),
-                'status' => 'pending',
-                'catatan_staff' => $validated['catatan_staff'] ?? null,
-            ]);
+            $existingReport = TaskReport::where('task_id', $task->id)
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $isRevisionSubmission = false;
+
+            if ($existingReport) {
+                $olderReportIds = TaskReport::where('task_id', $task->id)
+                    ->where('id', '!=', $existingReport->id)
+                    ->pluck('id');
+
+                if ($olderReportIds->isNotEmpty()) {
+                    ApprovalLog::whereIn('report_id', $olderReportIds)
+                        ->update(['report_id' => $existingReport->id]);
+                    TaskReport::whereIn('id', $olderReportIds)->delete();
+                }
+
+                $isRevisionSubmission = $existingReport->approvalLogs()
+                    ->where('action', 'reject')
+                    ->exists();
+
+                $existingReport->update([
+                    'submitted_by' => $user->id,
+                    'submitted_at' => now(),
+                    'status' => 'pending',
+                    'catatan_staff' => $validated['catatan_staff'] ?? null,
+                ]);
+
+                $activeReport = $existingReport->fresh(['approvalLogs.user:id,name,role', 'submittedBy:id,name,role']);
+            } else {
+                $activeReport = TaskReport::create([
+                    'task_id' => $task->id,
+                    'submitted_by' => $user->id,
+                    'submitted_at' => now(),
+                    'status' => 'pending',
+                    'catatan_staff' => $validated['catatan_staff'] ?? null,
+                ]);
+            }
 
             $task->update(['status' => 'waiting_approval']);
 
@@ -281,21 +315,23 @@ class TaskController extends Controller
             $reviewers = User::whereIn('role', ['SPV', 'Manager', 'Admin'])->get();
             foreach ($reviewers as $reviewer) {
                 $reviewer->notify(new TaskNotification([
-                    'title' => 'Laporan Tugas Masuk',
-                    'message' => "Staff {$user->name} telah mengirim laporan untuk '{$task->judul}'.",
+                    'title' => $isRevisionSubmission ? 'Laporan Revisi Tugas Masuk' : 'Laporan Tugas Masuk',
+                    'message' => $isRevisionSubmission
+                        ? "Staff {$user->name} telah mengirim ulang hasil revisi untuk '{$task->judul}'."
+                        : "Staff {$user->name} telah mengirim laporan untuk '{$task->judul}'.",
                     'task_id' => $task->id,
-                    'report_id' => $newReport->id,
+                    'report_id' => $activeReport->id,
                     'type' => 'report_submitted',
                 ]));
             }
 
-            return $newReport;
+            return $activeReport;
         });
 
         return response()->json([
             'message' => 'Laporan penyelesaian tugas berhasil dikirim dan menunggu verifikasi supervisor.',
             'report' => $report,
-            'task' => $task->fresh(['assignedTo:id,name,role,email', 'createdBy:id,name', 'checklistItems', 'reports', 'unit:id,nama,tipe,alamat'])
+            'task' => $task->fresh($this->taskRelations)
         ]);
     }
 }

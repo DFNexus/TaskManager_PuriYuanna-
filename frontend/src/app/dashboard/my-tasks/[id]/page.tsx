@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api, { getStorageUrl } from '@/lib/api';
+import { summarizeTaskReports } from '@/lib/approvalUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,13 +25,15 @@ import {
   Camera,
   Eye,
   Building2,
-  ExternalLink
+  ExternalLink,
+  History
 } from 'lucide-react';
 
 interface ChecklistItem {
   id: number;
   task_id: number;
   label: string;
+  deskripsi?: string | null;
   tipe: 'required' | 'optional';
   is_checked: boolean;
   urutan: number;
@@ -251,20 +254,22 @@ export default function TaskExecutionPage() {
     return requiredItems.filter((i) => !i.is_checked).length;
   }, [requiredItems]);
 
-  const latestRejectionNote = useMemo(() => {
-    if (!task?.reports) return null;
-    for (const report of task.reports) {
-      if (report.approval_logs) {
-        const rejectLog = report.approval_logs.find((l) => l.action === 'reject');
-        if (rejectLog?.catatan) return rejectLog.catatan;
-      }
-    }
-    return null;
+  const approvalSummary = useMemo(() => {
+    return summarizeTaskReports(task?.reports, task?.status || '');
   }, [task]);
+
+  const latestRejectLog = approvalSummary.latestRejectLog;
 
   const canSubmit = uncompletedRequiredCount === 0 && requiredItems.length > 0;
 
   const getStatusBadge = (status: string) => {
+    if (status === 'done' && approvalSummary.isRevisedApproval) {
+      return (
+        <Badge className="bg-teal-100 text-teal-900 border border-teal-400/60 dark:bg-teal-900/50 dark:text-teal-200 dark:border-teal-700">
+          Revisi Disetujui
+        </Badge>
+      );
+    }
     switch (status) {
       case 'pending':
         return <Badge variant="warning">Pending</Badge>;
@@ -331,8 +336,18 @@ export default function TaskExecutionPage() {
       <Card className="shadow-xs">
         <CardHeader className="pb-4">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {getStatusBadge(task.status)}
+              {approvalSummary.revisionCount > 0 && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  <RotateCcw className="h-3 w-3" /> {approvalSummary.revisionCount}x Revisi
+                </span>
+              )}
+              {approvalSummary.isDirectApproval && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                  Langsung Approve
+                </span>
+              )}
               {getPriorityBadge(task.prioritas)}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -422,10 +437,14 @@ export default function TaskExecutionPage() {
           <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
           <div className="text-sm">
             <h4 className="font-semibold text-emerald-900 dark:text-emerald-200">
-              Tugas Selesai & Disetujui!
+              {approvalSummary.isRevisedApproval ? 'Revisi Tugas Selesai & Disetujui!' : 'Tugas Selesai & Disetujui!'}
             </h4>
             <p className="text-emerald-700 dark:text-emerald-300 mt-0.5">
-              Kerja bagus! Seluruh pekerjaan pada tugas ini telah disetujui oleh Supervisor.
+              Kerja bagus! Seluruh pekerjaan pada tugas ini telah disetujui
+              {approvalSummary.latestApproveLog?.user?.name
+                ? ` oleh ${approvalSummary.latestApproveLog.user.name} (${approvalSummary.latestApproveLog.user.role})`
+                : ' oleh Supervisor'}
+              {approvalSummary.revisionCount > 0 ? ` setelah ${approvalSummary.revisionCount}x revisi.` : '.'}
             </p>
           </div>
         </div>
@@ -436,19 +455,75 @@ export default function TaskExecutionPage() {
           <RotateCcw className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
           <div className="text-sm flex-1">
             <h4 className="font-semibold text-red-900 dark:text-red-200">
-              Perlu Revisi Pengerjaan
+              Perlu Revisi Pengerjaan {approvalSummary.revisionCount > 0 ? `(Revisi ke-${approvalSummary.revisionCount})` : ''}
             </h4>
             <p className="text-red-700 dark:text-red-300 mt-0.5">
-              Laporan ditolak oleh Supervisor. Mohon periksa kembali catatan dan lakukan perbaikan pada checklist sebelum submit ulang.
+              Laporan diminta revisi
+              {latestRejectLog?.user?.name
+                ? ` oleh ${latestRejectLog.user.name} (${latestRejectLog.user.role})`
+                : ' oleh Supervisor'}
+              . Mohon periksa kembali catatan dan lakukan perbaikan pada checklist sebelum submit ulang.
             </p>
-            {latestRejectionNote && (
+            {latestRejectLog?.catatan && (
               <div className="mt-2.5 p-3 bg-white dark:bg-gray-900 rounded-md border border-red-200 dark:border-red-800 text-xs text-red-900 dark:text-red-200 shadow-2xs">
-                <span className="font-bold">Alasan Penolakan dari Supervisor: </span>
-                <span className="italic">&ldquo;{latestRejectionNote}&rdquo;</span>
+                <span className="font-bold">
+                  Catatan Revisi dari {latestRejectLog.user?.name || 'Supervisor'}:{' '}
+                </span>
+                <span className="italic">&ldquo;{latestRejectLog.catatan}&rdquo;</span>
               </div>
             )}
           </div>
         </div>
+      )}
+
+      {/* Riwayat Review & Approval */}
+      {approvalSummary.logs.length > 0 && (
+        <Card className="shadow-xs">
+          <CardHeader className="py-3 px-4 border-b flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-bold flex items-center gap-1.5">
+              <History className="h-4 w-4 text-[#22bcb4]" /> Riwayat Approval & Revisi
+            </CardTitle>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+              {approvalSummary.revisionCount > 0 ? `${approvalSummary.revisionCount}x Revisi` : 'Langsung Approve'}
+            </span>
+          </CardHeader>
+          <CardContent className="p-4 space-y-2">
+            {(() => {
+              let rejectIdx = 0;
+              return approvalSummary.logs.map((log) => {
+                if (log.action === 'reject') rejectIdx += 1;
+                return (
+                  <div
+                    key={log.id}
+                    className={`p-2.5 rounded-md border text-xs ${
+                      log.action === 'approve'
+                        ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20'
+                        : 'bg-red-50/50 border-red-200 dark:bg-red-950/20'
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-1 font-semibold">
+                      <span className={log.action === 'approve' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}>
+                        {log.action === 'approve'
+                          ? approvalSummary.revisionCount > 0
+                            ? 'Revisi Disetujui'
+                            : 'Disetujui'
+                          : `Permintaan Revisi #${rejectIdx}`}{' '}
+                        oleh {log.user?.name || '-'} ({log.user?.role || '-'})
+                      </span>
+                      <span className="text-muted-foreground font-normal">
+                        {new Date(log.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}{' '}
+                        {new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    {log.catatan && (
+                      <p className="mt-1 text-gray-700 dark:text-gray-300">Catatan: {log.catatan}</p>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </CardContent>
+        </Card>
       )}
 
       {/* Checklist Items List */}
@@ -526,38 +601,47 @@ export default function TaskExecutionPage() {
                           </Badge>
                         </div>
 
-                        {/* Catatan / Keterangan item */}
+                        {/* Deskripsi Tugas per Item dari Admin/Manager/SPV */}
+                        {item.deskripsi && (
+                          <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed">
+                            {item.deskripsi}
+                          </p>
+                        )}
+
+                        {/* Catatan / Keterangan item dari Staf */}
                         {item.catatan && editingNoteId !== item.id && (
                           <div className="mt-2 text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-2 rounded border flex items-start gap-1.5">
                             <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                            <span>{item.catatan}</span>
+                            <span>Catatan Staf: {item.catatan}</span>
                           </div>
                         )}
 
                         {/* Note editor form */}
                         {editingNoteId === item.id && (
-                          <div className="mt-2 flex gap-2 items-center">
+                          <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:items-center">
                             <Input
                               value={tempNote}
-                              placeholder="Tulis catatan (contoh: sprei nomor 2 ada noda)"
+                              placeholder="Tulis catatan pengerjaan (contoh: sprei nomor 2 ada noda)"
                               onChange={(e) => setTempNote(e.target.value)}
-                              className="text-xs h-8"
+                              className="h-9 bg-white dark:bg-gray-900"
                             />
-                            <Button
-                              size="sm"
-                              className="h-8 text-xs"
-                              onClick={() => handleSaveNote(item.id)}
-                            >
-                              Simpan
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 text-xs"
-                              onClick={() => setEditingNoteId(null)}
-                            >
-                              Batal
-                            </Button>
+                            <div className="flex gap-2 shrink-0">
+                              <Button
+                                size="sm"
+                                className="h-9 text-xs"
+                                onClick={() => handleSaveNote(item.id)}
+                              >
+                                Simpan
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-9 text-xs"
+                                onClick={() => setEditingNoteId(null)}
+                              >
+                                Batal
+                              </Button>
+                            </div>
                           </div>
                         )}
 
@@ -710,7 +794,7 @@ export default function TaskExecutionPage() {
               <label className="text-sm font-medium">Catatan Akhir Staff (Opsional)</label>
               <textarea
                 rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="Misal: Kamar 201 sudah dibersihkan dan siap ditempati tamu jam 2 siang."
                 value={catatanStaff}
                 onChange={(e) => setCatatanStaff(e.target.value)}

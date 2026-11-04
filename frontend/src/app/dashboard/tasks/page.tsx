@@ -532,10 +532,10 @@ export default function TasksPage() {
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Status Filter */}
           <Select value={filterStatus} onValueChange={(val) => val && setFilterStatus(val)}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[130px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -550,7 +550,7 @@ export default function TasksPage() {
 
           {/* Priority Filter */}
           <Select value={filterPrioritas} onValueChange={(val) => val && setFilterPrioritas(val)}>
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-full sm:w-[130px]">
               <SelectValue placeholder="Prioritas" />
             </SelectTrigger>
             <SelectContent>
@@ -563,7 +563,7 @@ export default function TasksPage() {
 
           {/* Unit Filter */}
           <Select value={filterUnit} onValueChange={(val) => val && setFilterUnit(val)}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue placeholder="Unit Properti" />
             </SelectTrigger>
             <SelectContent>
@@ -579,7 +579,7 @@ export default function TasksPage() {
 
           {/* Category Filter */}
           <Select value={filterKategori} onValueChange={(val) => val && setFilterKategori(val)}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[130px]">
               <SelectValue placeholder="Kategori" />
             </SelectTrigger>
             <SelectContent>
@@ -594,8 +594,132 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* Tasks Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
+      {/* Mobile Tasks Card List */}
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Memuat data task...
+          </div>
+        ) : filteredTasks.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Belum ada task yang sesuai dengan kriteria filter.
+          </div>
+        ) : (
+          filteredTasks.map((task) => {
+            const totalChecklist = task.checklist_items?.length || 0;
+            const completedChecklist = task.checklist_items?.filter((i) => i.is_checked).length || 0;
+            const percentage = totalChecklist > 0 ? Math.round((completedChecklist / totalChecklist) * 100) : 0;
+
+            return (
+              <div
+                key={task.id}
+                className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-xs space-y-3"
+              >
+                {/* Header row: Categories, priority & status */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                      {task.kategori}
+                    </span>
+                    {getPriorityBadge(task.prioritas)}
+                  </div>
+                  {getStatusBadge(task.status)}
+                </div>
+
+                {/* Title & description */}
+                <div>
+                  <h3 className="font-bold text-base text-gray-900 dark:text-gray-100 leading-snug">
+                    {task.judul}
+                  </h3>
+                  {task.deskripsi && (
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                      {task.deskripsi}
+                    </p>
+                  )}
+                </div>
+
+                {/* Unit & Assignee info */}
+                <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50/70 dark:bg-gray-800/40 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Unit Properti</span>
+                    <div className="flex items-center gap-1 font-medium mt-0.5 truncate">
+                      <Building2 className="h-3.5 w-3.5 text-[#22bcb4] shrink-0" />
+                      <span className="truncate">{task.unit?.nama || 'Umum'}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Ditugaskan Ke</span>
+                    <span className="font-medium mt-0.5 block truncate">
+                      {task.assigned_to?.name || 'Belum di-assign'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Deadline & Checklist Progress */}
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-[#22bcb4]" />
+                      {new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, {new Date(task.deadline).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                    </span>
+                    <span className="font-semibold text-gray-700 dark:text-gray-300">
+                      {completedChecklist}/{totalChecklist} Checklist ({percentage}%)
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Mobile Action Buttons Bar */}
+                <div className="flex items-center justify-between gap-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs h-8 gap-1.5 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
+                    onClick={() => handleOpenDetail(task)}
+                  >
+                    <Eye className="h-3.5 w-3.5" /> Detail
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2.5 text-xs"
+                    title="Assign Staf"
+                    onClick={() => handleOpenAssign(task)}
+                  >
+                    <UserCheck className="h-3.5 w-3.5 text-[#22bcb4]" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2.5 text-xs"
+                    title="Edit Task"
+                    onClick={() => handleOpenEdit(task)}
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-amber-600" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    title="Hapus Task"
+                    onClick={() => handleDelete(task.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Tasks Table */}
+      <div className="hidden md:block bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50/50 dark:bg-gray-800/50">

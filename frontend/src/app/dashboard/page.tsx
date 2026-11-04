@@ -76,9 +76,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="bg-white dark:bg-[#011321] text-[#011321] dark:text-white p-6 rounded-xl shadow-xs border border-teal-100 dark:border-[#ffeacd]/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden transition-colors">
+      <div className="bg-white dark:bg-[#011321] text-[#011321] dark:text-white p-4 sm:p-6 rounded-xl shadow-xs border border-teal-100 dark:border-[#ffeacd]/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden transition-colors">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-[#22bcb4]/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="relative z-10">
+        <div className="relative z-10 w-full sm:w-auto">
           <div className="inline-flex items-center gap-2 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#006e69] dark:text-[#22bcb4]">
               Dashboard Operasional
@@ -87,23 +87,23 @@ export default function DashboardPage() {
               {user?.role}
             </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#011321] dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#011321] dark:text-white">
             Selamat Datang, <span className="text-[#006e69] dark:text-[#22bcb4]">{user?.name}</span>!
           </h1>
-          <p className="text-slate-600 dark:text-slate-300 text-sm mt-1 max-w-xl">
+          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
             Sistem manajemen task & checklist terpadu Puri Yuanna Living. Pantau dan kelola seluruh alur operasional properti secara real-time.
           </p>
         </div>
         {(user?.role === 'Manager' || user?.role === 'Admin') && (
-          <Link href="/dashboard/tasks?action=create" className="relative z-10 shrink-0">
-            <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center">
+          <Link href="/dashboard/tasks?action=create" className="relative z-10 w-full sm:w-auto shrink-0">
+            <Button className="w-full sm:w-auto bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center justify-center">
               <Plus className="mr-2 h-4 w-4" /> Buat Task Baru
             </Button>
           </Link>
         )}
         {user?.role === 'Staff' && (
-          <Link href="/dashboard/my-tasks" className="relative z-10 shrink-0">
-            <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center">
+          <Link href="/dashboard/my-tasks" className="relative z-10 w-full sm:w-auto shrink-0">
+            <Button className="w-full sm:w-auto bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-xs flex items-center justify-center">
               <ListTodo className="mr-2 h-4 w-4" /> Buka Tugas Saya
             </Button>
           </Link>
@@ -278,20 +278,20 @@ export default function DashboardPage() {
                 <Link
                   key={task.id}
                   href={user?.role === 'Staff' ? `/dashboard/my-tasks/${task.id}` : `/dashboard/tasks`}
-                  className="block hover:bg-[#22bcb4]/5 dark:hover:bg-gray-800/50 -mx-4 px-4 rounded-md transition-colors"
+                  className="block hover:bg-[#22bcb4]/5 dark:hover:bg-gray-800/50 -mx-2 sm:-mx-4 px-2 sm:px-4 rounded-md transition-colors"
                 >
-                  <div className="py-3 flex items-center justify-between gap-4">
-                    <div className="min-w-0">
+                  <div className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate hover:text-[#006e69] dark:hover:text-[#22bcb4] transition-colors">
                         {task.judul}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
                         Kategori: <span className="text-[#011321] dark:text-slate-300 font-medium">{task.kategori}</span> · Ditugaskan: <span className="font-semibold text-gray-800 dark:text-gray-200">{task.assigned_to?.name || '-'}</span>
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-xs text-muted-foreground hidden sm:inline">
-                        Deadline: {new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-1 sm:pt-0">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                       </span>
                       {getStatusBadge(task.status)}
                     </div>

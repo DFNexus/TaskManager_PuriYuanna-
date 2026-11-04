@@ -295,8 +295,89 @@ export default function ApprovalsPage() {
         </div>
       </div>
 
-      {/* Reports Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
+      {/* Mobile Reports Card List */}
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Memuat daftar laporan masuk...
+          </div>
+        ) : filteredReports.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Tidak ada laporan pada kategori ini.
+          </div>
+        ) : (
+          filteredReports.map((report) => {
+            const totalChecklist = report.task?.checklist_items?.length || 0;
+            const photoCount = report.task?.checklist_items?.filter((i) => i.foto_url).length || 0;
+
+            return (
+              <div
+                key={report.id}
+                className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-xs space-y-3"
+              >
+                {/* Header: Title, Unit & Status */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-base text-gray-900 dark:text-gray-100 leading-snug truncate">
+                      {report.task?.judul}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                      <Building2 className="h-3 w-3 text-[#22bcb4] shrink-0" />
+                      <span>{report.task?.unit?.nama || 'Umum'}</span>
+                      <span className="opacity-40">·</span>
+                      <span>{report.task?.kategori}</span>
+                    </div>
+                  </div>
+                  {getStatusBadge(report.status)}
+                </div>
+
+                {/* Submitter & Time Info */}
+                <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50/70 dark:bg-gray-800/40 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Staf Pengirim</span>
+                    <span className="font-medium mt-0.5 block truncate">{report.submitted_by?.name || '-'}</span>
+                    <span className="text-[10px] text-muted-foreground block">{report.submitted_by?.role || 'Staff'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Waktu Submit</span>
+                    <span className="font-medium mt-0.5 block truncate">
+                      {new Date(report.submitted_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground block">
+                      {new Date(report.submitted_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                    </span>
+                  </div>
+                </div>
+
+                {/* Checklist & Photos Count Bar */}
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800">
+                      {totalChecklist} Item Checklist
+                    </span>
+                    {photoCount > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                        <ImageIcon className="h-3.5 w-3.5" /> {photoCount} Foto
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Review Action Button */}
+                <Button
+                  className="w-full bg-[#ffeacd] hover:bg-[#ffe0b8] text-[#011321] font-bold shadow-xs flex items-center justify-center gap-1.5 h-9"
+                  onClick={() => handleOpenReview(report)}
+                >
+                  <Eye className="h-4 w-4" /> Periksa & Review Laporan
+                </Button>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Reports Table */}
+      <div className="hidden md:block bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50/50 dark:bg-gray-800/50">

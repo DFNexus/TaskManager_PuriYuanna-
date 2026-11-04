@@ -126,15 +126,15 @@ export default function MyTasksPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
-        <h1 className="text-2xl font-bold tracking-tight">Tugas Saya</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+      <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Tugas Saya</h1>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           Daftar seluruh tugas operasional yang ditugaskan kepada Anda. Selesaikan checklist dan laporkan hasil pengerjaan.
         </p>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card className="shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400">Perlu Dikerjakan</CardTitle>
@@ -192,9 +192,9 @@ export default function MyTasksPage() {
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
           <Select value={filterStatus} onValueChange={(val) => val && setFilterStatus(val)}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue placeholder="Status Tugas" />
             </SelectTrigger>
             <SelectContent>
@@ -208,7 +208,7 @@ export default function MyTasksPage() {
           </Select>
 
           <Select value={filterPrioritas} onValueChange={(val) => val && setFilterPrioritas(val)}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <SelectValue placeholder="Prioritas" />
             </SelectTrigger>
             <SelectContent>

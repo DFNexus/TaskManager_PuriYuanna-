@@ -482,13 +482,23 @@ export default function TaskExecutionPage() {
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    {/* Checkbox & Item Label */}
-                    <div className="flex items-start gap-3 flex-1">
+                    {/* Checkbox & Item Label with generous touch target */}
+                    <div 
+                      className={`flex items-start gap-3 flex-1 ${!isReadOnly ? 'cursor-pointer select-none' : ''}`}
+                      onClick={(e) => {
+                        if (!isReadOnly && !(e.target as HTMLElement).closest('button, input, textarea, a, .group')) {
+                          handleToggleCheck(item);
+                        }
+                      }}
+                    >
                       <button
                         type="button"
                         disabled={isReadOnly}
-                        onClick={() => handleToggleCheck(item)}
-                        className={`mt-0.5 h-6 w-6 rounded-md border flex items-center justify-center transition-all ${
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleCheck(item);
+                        }}
+                        className={`mt-0.5 h-6 w-6 min-w-[24px] rounded-md border flex items-center justify-center transition-all ${
                           item.is_checked
                             ? 'bg-[#22bcb4] border-[#22bcb4] text-[#011321] shadow-xs'
                             : 'border-gray-300 dark:border-gray-600 hover:border-[#22bcb4]'
@@ -497,8 +507,8 @@ export default function TaskExecutionPage() {
                         {item.is_checked && <Check className="h-4 w-4 stroke-[3]" />}
                       </button>
 
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span
                             className={`text-sm font-semibold ${
                               item.is_checked
@@ -663,9 +673,9 @@ export default function TaskExecutionPage() {
       {/* Bottom Submit Action Bar */}
       {task.status !== 'waiting_approval' && task.status !== 'done' && (
         <Card className="shadow-xs border-primary/20 bg-gradient-to-r from-teal-50/30 to-transparent dark:from-teal-950/10">
-          <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <div>
-              <h3 className="font-semibold text-base">Siap Mengirimkan Laporan?</h3>
+              <h3 className="font-semibold text-sm sm:text-base">Siap Mengirimkan Laporan?</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {canSubmit
                   ? 'Seluruh checklist wajib telah selesai. Klik tombol di samping untuk mengirim ke supervisor.'
@@ -677,7 +687,7 @@ export default function TaskExecutionPage() {
               size="lg"
               disabled={!canSubmit}
               onClick={() => setIsSubmitModalOpen(true)}
-              className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm flex items-center gap-2 shrink-0 w-full sm:w-auto"
+              className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto h-11"
             >
               <Send className="h-4 w-4" /> Kirim Laporan Tugas
             </Button>

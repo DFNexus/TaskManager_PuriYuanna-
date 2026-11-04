@@ -42,7 +42,7 @@ export default function LoginPage() {
 
       {/* Login Card */}
       <div className="w-full max-w-[400px] rounded-3xl bg-[#0a0a0a]/95 border border-white/10 shadow-2xl backdrop-blur-sm relative z-10 overflow-hidden">
-        <div className="px-8 pt-10 pb-8">
+        <div className="px-5 sm:px-8 pt-8 sm:pt-10 pb-6 sm:pb-8">
           {/* Card Header */}
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-white mb-2">Sign in to Yuliv Task Manager</h2>

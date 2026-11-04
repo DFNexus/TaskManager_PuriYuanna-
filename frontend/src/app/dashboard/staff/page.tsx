@@ -164,20 +164,20 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manajemen Staff & Hak Akses</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Kelola daftar email staf terotorisasi dan unit penempatan.</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Manajemen Staff & Hak Akses</h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">Kelola daftar email staf terotorisasi dan unit penempatan.</p>
         </div>
 
-        <Button className="bg-[#22bcb4] hover:bg-[#22bcb4]/90 text-[#011321] font-semibold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+        <Button className="w-full sm:w-auto bg-[#22bcb4] hover:bg-[#22bcb4]/90 text-[#011321] font-semibold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Daftarkan Izin Staf
         </Button>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) resetForm();
         }}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90dvh] overflow-y-auto w-[calc(100vw-1.5rem)] sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{editingId ? 'Edit Data Staf' : 'Daftarkan Staf Baru (Whitelist)'}</DialogTitle>
               {!editingId ? (
@@ -199,7 +199,7 @@ export default function StaffPage() {
                 <Label>Nama Lengkap {editingId ? '' : '(Opsional)'}</Label>
                 <Input value={name} onChange={e => setName(e.target.value)} placeholder={editingId ? 'Nama Lengkap' : 'Nama Lengkap (opsional, dapat diisi staf saat Sign Up)'} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Role</Label>
                   <Select value={role} onValueChange={(val) => val && setRole(val)}>
@@ -262,7 +262,82 @@ export default function StaffPage() {
         </Dialog>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
+      {/* Mobile Staff Cards List */}
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Memuat data staf...
+          </div>
+        ) : users.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Belum ada staff yang terdaftar.
+          </div>
+        ) : (
+          users.map((u) => (
+            <div
+              key={u.id}
+              className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-xs space-y-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-base text-gray-900 dark:text-gray-100 truncate">
+                    {u.name || <span className="text-gray-400 italic text-sm">(Belum diisi)</span>}
+                  </h3>
+                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                </div>
+                {getRoleBadge(u.role)}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50/70 dark:bg-gray-800/40 p-2.5 rounded-lg border border-gray-100 dark:border-gray-800">
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Penempatan</span>
+                  <span className="font-medium mt-0.5 block truncate">{u.unit?.nama || 'Pusat (Semua)'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Status & Registrasi</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`inline-block w-2 h-2 rounded-full ${u.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    <span className="font-medium text-xs">{u.status === 'active' ? 'Aktif' : 'Nonaktif'}</span>
+                    <span className="text-[10px] text-muted-foreground">({u.is_registered ? 'Terdaftar' : 'Belum Aktivasi'})</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-gray-100 dark:border-gray-800">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditClick(u)}
+                  className="h-8 px-2.5 text-xs gap-1"
+                >
+                  <Pencil className="h-3.5 w-3.5 text-amber-600" /> Edit
+                </Button>
+                {u.is_registered && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleResetRegistration(u)}
+                    className="h-8 px-2.5 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Reset
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDelete(u.id)}
+                  className="h-8 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 gap-1"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Hapus
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Staff Table */}
+      <div className="hidden md:block bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50/50 dark:bg-gray-800/50">

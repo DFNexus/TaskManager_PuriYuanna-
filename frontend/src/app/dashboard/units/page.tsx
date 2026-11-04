@@ -89,20 +89,20 @@ export default function UnitsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-gray-900 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Manajemen Unit</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Kelola daftar Guest House dan Kost di Puri Yuanna.</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Manajemen Unit</h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">Kelola daftar Guest House dan Kost di Puri Yuanna.</p>
         </div>
 
-        <Button className="bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+        <Button className="w-full sm:w-auto bg-[#22bcb4] hover:bg-[#1fa9a2] text-[#011321] font-bold shadow-sm transition-all" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Tambah Unit
         </Button>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) resetForm();
         }}>
-          <DialogContent>
+          <DialogContent className="max-h-[90dvh] overflow-y-auto w-[calc(100vw-1.5rem)] sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{editingId ? 'Edit Unit' : 'Tambah Unit Baru'}</DialogTitle>
             </DialogHeader>
@@ -133,7 +133,64 @@ export default function UnitsPage() {
         </Dialog>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
+      {/* Mobile Unit Cards */}
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Memuat data unit...
+          </div>
+        ) : units.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 text-center text-muted-foreground border">
+            Belum ada unit yang terdaftar.
+          </div>
+        ) : (
+          units.map((unit) => (
+            <div
+              key={unit.id}
+              className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 shadow-xs space-y-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-bold text-base text-gray-900 dark:text-gray-100">
+                    {unit.nama}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {unit.alamat || 'Alamat belum diatur'}
+                  </p>
+                </div>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${unit.tipe === 'GH' ? 'bg-[#22bcb4] text-[#011321]' : 'bg-[#ffeacd] text-[#011321]'}`}>
+                  {unit.tipe === 'GH' ? 'Guest House' : 'Kost'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
+                <span className="text-muted-foreground">ID Unit: #{unit.id}</span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditClick(unit)}
+                    className="h-8 px-2.5 text-xs gap-1"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-amber-600" /> Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(unit.id)}
+                    className="h-8 px-2.5 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 gap-1"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Hapus
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Units Table */}
+      <div className="hidden md:block bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50/50 dark:bg-gray-800/50">

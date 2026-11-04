@@ -157,7 +157,7 @@ export default function NotificationDropdown() {
 
       {/* Popover Card */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
+        <div className="fixed inset-x-2 top-16 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 mt-2 max-w-sm sm:w-96 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
           <div className="p-3.5 border-b flex items-center justify-between bg-gray-50/70 dark:bg-gray-800/50">
             <div className="flex items-center gap-2">
               <span className="font-bold text-sm">Notifikasi</span>
